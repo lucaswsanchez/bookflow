@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ClientsModule } from './clients/clients.module';
 import { APP_FILTER } from '@nestjs/core';
+import { AppointmentsModule } from './appointments/appointments.module';
 import { AuthModule } from './auth/auth.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HealthController } from './health/health.controller';
@@ -19,6 +20,7 @@ import { StaffModule } from './staff/staff.module';
     StaffModule,
     ClientsModule,
     PublicModule,
+    AppointmentsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
