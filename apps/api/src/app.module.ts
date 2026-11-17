@@ -6,9 +6,16 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { ServicesModule } from './services/services.module';
+import { StaffModule } from './staff/staff.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, ServicesModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    AuthModule,
+    ServicesModule,
+    StaffModule,
+  ],
   controllers: [HealthController],
   providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
 })
