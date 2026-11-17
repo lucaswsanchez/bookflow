@@ -14,7 +14,8 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "ts-node --transpile-only prisma/seed.ts",
     "db:reset": "prisma migrate reset --force --skip-generate",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test:cov": "jest --coverage"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
