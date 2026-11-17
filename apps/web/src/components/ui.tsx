@@ -1,6 +1,6 @@
 import clsx from 'clsx';
-import { AlertTriangle, Inbox, Loader2 } from 'lucide-react';
-import { ButtonHTMLAttributes, forwardRef, InputHTMLAttributes, ReactNode } from 'react';
+import { AlertTriangle, Inbox, Loader2, X } from 'lucide-react';
+import { ButtonHTMLAttributes, forwardRef, InputHTMLAttributes, ReactNode, useEffect } from 'react';
 import { STATUS_LABELS } from '../lib/status';
 import type { AppointmentStatus } from '../lib/types';
 
@@ -178,5 +178,58 @@ export function Logo({ className }: { className?: string }) {
       <img src="/favicon.svg" alt="" className="size-7" />
       BookFlow
     </span>
+  );
+}
+
+export function Modal({
+  title,
+  open,
+  onClose,
+  children,
+  testId = 'modal',
+}: {
+  title: string;
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
+  testId?: string;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 sm:items-center sm:p-4"
+      onMouseDown={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`${testId}-title`}
+        data-testid={testId}
+        onMouseDown={(e) => e.stopPropagation()}
+        className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:max-w-lg sm:rounded-2xl"
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h2 id={`${testId}-title`} className="text-lg font-semibold text-slate-900">
+            {title}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-lg p-1 text-slate-500 hover:bg-slate-100"
+          >
+            <X className="size-5" aria-hidden />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
   );
 }
