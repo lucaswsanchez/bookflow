@@ -43,6 +43,8 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - name: E2E tests (migrate + seed + Supertest)
+        run: pnpm test:e2e
       - run: pnpm build
 
   web:
