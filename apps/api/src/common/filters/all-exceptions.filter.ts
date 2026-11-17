@@ -46,6 +46,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
         typeof body === 'string'
           ? body
           : ((body as { message?: string | string[] }).message ?? exception.message);
+    } else if (isOverlapError(exception)) {
+      // Checked before generic Prisma errors: the DB exclusion constraint can surface
+      // as different Prisma error classes depending on the query engine path.
+      status = HttpStatus.CONFLICT;
+      message = 'The selected time slot is no longer available';
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       if (exception.code === 'P2025') {
         status = HttpStatus.NOT_FOUND;
@@ -57,9 +62,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         status = HttpStatus.CONFLICT;
         message = 'The resource is referenced by other records';
       }
-    } else if (isOverlapError(exception)) {
-      status = HttpStatus.CONFLICT;
-      message = 'The selected time slot is no longer available';
     }
 
     if (status >= 500) {
