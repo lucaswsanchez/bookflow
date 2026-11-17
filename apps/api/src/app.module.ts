@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { PublicModule } from './public/public.module';
 import { ServicesModule } from './services/services.module';
 import { StaffModule } from './staff/staff.module';
 
@@ -17,6 +18,7 @@ import { StaffModule } from './staff/staff.module';
     ServicesModule,
     StaffModule,
     ClientsModule,
+    PublicModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
