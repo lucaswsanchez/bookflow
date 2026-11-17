@@ -4,7 +4,11 @@ import { AuthProvider } from './auth/AuthContext';
 import { RequireAuth } from './auth/RequireAuth';
 import { ApiError } from './lib/api';
 import AdminLayout from './pages/admin/AdminLayout';
+import AgendaPage from './pages/admin/AgendaPage';
+import ClientsPage from './pages/admin/ClientsPage';
 import DashboardPage from './pages/admin/DashboardPage';
+import ServicesPage from './pages/admin/ServicesPage';
+import StaffPage from './pages/admin/StaffPage';
 import BookingPage from './pages/booking/BookingPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -53,6 +57,31 @@ export default function App() {
               }
             >
               <Route index element={<DashboardPage />} />
+              <Route path="agenda" element={<AgendaPage />} />
+              <Route
+                path="services"
+                element={
+                  <RequireAuth roles={['ADMIN']}>
+                    <ServicesPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="staff"
+                element={
+                  <RequireAuth roles={['ADMIN']}>
+                    <StaffPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="clients"
+                element={
+                  <RequireAuth roles={['ADMIN']}>
+                    <ClientsPage />
+                  </RequireAuth>
+                }
+              />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

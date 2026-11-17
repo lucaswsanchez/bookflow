@@ -1,0 +1,227 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import {
+  Button,
+  Card,
+  EmptyState,
+  ErrorState,
+  Field,
+  Input,
+  Modal,
+  Spinner,
+} from '../../components/ui';
+import { api } from '../../lib/api';
+import { formatDuration, formatPrice, slugify } from '../../lib/format';
+import type { Service } from '../../lib/types';
+import { PageHeader } from './AdminLayout';
+
+const schema = z.object({
+  name: z.string().trim().min(2, 'Name is required').max(80),
+  description: z.string().max(300).optional(),
+  durationMinutes: z.coerce.number().int().min(5, 'At least 5 minutes').max(480, 'At most 8 hours'),
+  price: z.coerce.number().int().min(0, 'Price cannot be negative'),
+  active: z.boolean(),
+});
+type FormValues = z.infer<typeof schema>;
+
+export default function ServicesPage() {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState<Service | 'new' | null>(null);
+  const services = useQuery({
+    queryKey: ['services', 'all'],
+    queryFn: () => api<Service[]>('/services', { query: { includeInactive: 'true' } }),
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => api<{ deleted: boolean }>(`/services/${id}`, { method: 'DELETE' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['services'] }),
+  });
+
+  return (
+    <>
+      <PageHeader
+        title="Services"
+        description="What clients can book, how long it takes and what it costs."
+        actions={
+          <Button onClick={() => setEditing('new')} data-testid="new-service">
+            <Plus className="size-4" aria-hidden /> New service
+          </Button>
+        }
+      />
+      {services.isLoading && <Spinner />}
+      {services.isError && (
+        <ErrorState message={services.error.message} onRetry={() => services.refetch()} />
+      )}
+      {services.data && services.data.length === 0 && (
+        <EmptyState title="No services yet" description="Create your first service." />
+      )}
+      {services.data && services.data.length > 0 && (
+        <Card className="overflow-x-auto">
+          <table className="w-full text-sm" data-testid="services-table">
+            <thead className="border-b border-slate-200 text-left text-xs uppercase text-slate-500">
+              <tr>
+                <th className="px-4 py-3 font-medium">Service</th>
+                <th className="px-4 py-3 font-medium">Duration</th>
+                <th className="px-4 py-3 font-medium">Price</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {services.data.map((s) => (
+                <tr key={s.id} data-testid={`service-row-${slugify(s.name)}`}>
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-slate-900">{s.name}</p>
+                    {s.description && <p className="text-xs text-slate-500">{s.description}</p>}
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">{formatDuration(s.durationMinutes)}</td>
+                  <td className="px-4 py-3 font-medium text-slate-900">{formatPrice(s.price)}</td>
+                  <td className="px-4 py-3">
+                    <span className={s.active ? 'text-emerald-700' : 'text-slate-400'}>
+                      {s.active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditing(s)}
+                        aria-label={`Edit ${s.name}`}
+                        data-testid="edit-service"
+                      >
+                        <Pencil className="size-4" aria-hidden />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Delete ${s.name}`}
+                        data-testid="delete-service"
+                        onClick={() => {
+                          if (
+                            confirm(
+                              `Delete "${s.name}"? Services with appointments will be deactivated instead.`,
+                            )
+                          )
+                            remove.mutate(s.id);
+                        }}
+                      >
+                        <Trash2 className="size-4" aria-hidden />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
+      <Modal
+        open={editing !== null}
+        onClose={() => setEditing(null)}
+        title={editing === 'new' ? 'New service' : 'Edit service'}
+        testId="service-modal"
+      >
+        {editing !== null && (
+          <ServiceForm
+            service={editing === 'new' ? null : editing}
+            onDone={() => setEditing(null)}
+          />
+        )}
+      </Modal>
+    </>
+  );
+}
+
+function ServiceForm({ service, onDone }: { service: Service | null; onDone: () => void }) {
+  const queryClient = useQueryClient();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: service?.name ?? '',
+      description: service?.description ?? '',
+      durationMinutes: service?.durationMinutes ?? 30,
+      price: service?.price ?? 0,
+      active: service?.active ?? true,
+    },
+  });
+  const save = useMutation({
+    mutationFn: (values: FormValues) =>
+      service
+        ? api(`/services/${service.id}`, { method: 'PATCH', body: values })
+        : api('/services', { method: 'POST', body: values }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['services'] });
+      onDone();
+    },
+  });
+
+  return (
+    <form
+      onSubmit={handleSubmit((v) => save.mutate({ ...v, description: v.description || undefined }))}
+      noValidate
+      className="space-y-4"
+      data-testid="service-form"
+    >
+      <Field label="Name" htmlFor="service-name" error={errors.name?.message}>
+        <Input id="service-name" invalid={!!errors.name} {...register('name')} />
+      </Field>
+      <Field label="Description" htmlFor="service-description">
+        <Input id="service-description" {...register('description')} />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field
+          label="Duration (minutes)"
+          htmlFor="service-duration"
+          error={errors.durationMinutes?.message}
+        >
+          <Input
+            id="service-duration"
+            type="number"
+            min={5}
+            step={5}
+            invalid={!!errors.durationMinutes}
+            {...register('durationMinutes')}
+          />
+        </Field>
+        <Field label="Price (ARS)" htmlFor="service-price" error={errors.price?.message}>
+          <Input
+            id="service-price"
+            type="number"
+            min={0}
+            step={500}
+            invalid={!!errors.price}
+            {...register('price')}
+          />
+        </Field>
+      </div>
+      <label className="flex items-center gap-2 text-sm text-slate-700">
+        <input type="checkbox" className="size-4 accent-brand-600" {...register('active')} /> Active
+        (bookable)
+      </label>
+      {save.isError && (
+        <p role="alert" className="text-sm text-red-600">
+          {save.error.message}
+        </p>
+      )}
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="secondary" onClick={onDone}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={save.isPending} data-testid="save-service">
+          Save
+        </Button>
+      </div>
+    </form>
+  );
+}
