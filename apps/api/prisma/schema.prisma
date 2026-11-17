@@ -7,3 +7,143 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model Business {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  name         String
+  description  String?
+  address      String?
+  phone        String?
+  timezone     String        @default("America/Argentina/Buenos_Aires")
+  currency     String        @default("ARS")
+  createdAt    DateTime      @default(now())
+  users        User[]
+  staff        Staff[]
+  services     Service[]
+  clients      Client[]
+  appointments Appointment[]
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  name          String
+  role          Role
+  businessId    String
+  business      Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  staffId       String?        @unique
+  staff         Staff?         @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  createdAt     DateTime       @default(now())
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Staff {
+  id           String         @id @default(cuid())
+  businessId   String
+  business     Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name         String
+  title        String?
+  color        String         @default("#4f46e5")
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  user         User?
+  workingHours WorkingHours[]
+  services     Service[]
+  appointments Appointment[]
+
+  @@index([businessId])
+}
+
+/// A working range for a staff member on a weekday.
+/// weekday: 0 = Sunday ... 6 = Saturday. Minutes are counted from local midnight.
+model WorkingHours {
+  id          String @id @default(cuid())
+  staffId     String
+  staff       Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  weekday     Int
+  startMinute Int
+  endMinute   Int
+
+  @@index([staffId, weekday])
+}
+
+model Service {
+  id              String        @id @default(cuid())
+  businessId      String
+  business        Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  durationMinutes Int
+  /// Price in whole Argentine pesos (ARS)
+  price           Int
+  active          Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  staff           Staff[]
+  appointments    Appointment[]
+
+  @@index([businessId])
+}
+
+model Client {
+  id           String        @id @default(cuid())
+  businessId   String
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name         String
+  phone        String
+  email        String?
+  notes        String?
+  createdAt    DateTime      @default(now())
+  appointments Appointment[]
+
+  @@unique([businessId, phone])
+}
+
+model Appointment {
+  id         String            @id @default(cuid())
+  code       String            @unique
+  businessId String
+  business   Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  staffId    String
+  staff      Staff             @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  serviceId  String
+  service    Service           @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  clientId   String
+  client     Client            @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  startsAt   DateTime          @db.Timestamptz(3)
+  endsAt     DateTime          @db.Timestamptz(3)
+  status     AppointmentStatus @default(CONFIRMED)
+  /// Price snapshot at booking time (ARS)
+  price      Int
+  notes      String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([businessId, startsAt])
+  @@index([staffId, startsAt])
+}
