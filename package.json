@@ -1,0 +1,22 @@
+{
+  "name": "bookflow",
+  "private": true,
+  "description": "Appointment booking and management for small businesses",
+  "license": "MIT",
+  "packageManager": "pnpm@9.12.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.6"
+  }
+}
