@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
 import { AppointmentDetail } from '../../components/AppointmentDetail';
 import {
@@ -50,7 +51,8 @@ export default function AgendaPage() {
 
   const [view, setView] = useState<View>('day');
   const [date, setDate] = useState(today);
-  const [staffId, setStaffId] = useState('');
+  const [params] = useSearchParams();
+  const [staffId, setStaffId] = useState(() => (isAdmin && params.get('staff')) || '');
   const [selected, setSelected] = useState<Appointment | null>(null);
   const [exporting, setExporting] = useState(false);
 

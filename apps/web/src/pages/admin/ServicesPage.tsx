@@ -1,27 +1,35 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Clock, Pencil, Plus, Scissors, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import {
+  Avatar,
+  Badge,
   Button,
-  Card,
+  Checkbox,
+  ConfirmDialog,
   EmptyState,
   ErrorState,
   Field,
+  IconButton,
   Input,
   Modal,
-  Spinner,
+  PageHeader,
+  Skeleton,
+  Table,
+  Td,
+  Textarea,
+  Th,
 } from '../../components/ui';
 import { api } from '../../lib/api';
 import { formatDuration, formatPrice, slugify } from '../../lib/format';
-import type { Service } from '../../lib/types';
-import { PageHeader } from '../../components/ui';
+import type { Service, StaffMember } from '../../lib/types';
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(80),
-  description: z.string().max(300).optional(),
+  description: z.string().max(300, 'At most 300 characters').optional(),
   durationMinutes: z.coerce.number().int().min(5, 'At least 5 minutes').max(480, 'At most 8 hours'),
   price: z.coerce.number().int().min(0, 'Price cannot be negative'),
   active: z.boolean(),
@@ -31,101 +39,157 @@ type FormValues = z.infer<typeof schema>;
 export default function ServicesPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<Service | 'new' | null>(null);
+  const [deleting, setDeleting] = useState<Service | null>(null);
   const services = useQuery({
     queryKey: ['services', 'all'],
     queryFn: () => api<Service[]>('/services', { query: { includeInactive: 'true' } }),
   });
+  const staff = useQuery({ queryKey: ['staff'], queryFn: () => api<StaffMember[]>('/staff') });
 
   const remove = useMutation({
     mutationFn: (id: string) => api<{ deleted: boolean }>(`/services/${id}`, { method: 'DELETE' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['services'] }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['services'] });
+      setDeleting(null);
+    },
   });
+
+  const offeredBy = (serviceId: string) =>
+    staff.data?.filter((s) => s.services?.some((sv) => sv.id === serviceId)) ?? [];
+  const activeCount = services.data?.filter((s) => s.active).length ?? 0;
 
   return (
     <>
       <PageHeader
         title="Services"
-        description="What clients can book, how long it takes and what it costs."
+        description="What clients can book online, how long it takes and what it costs."
         actions={
           <Button onClick={() => setEditing('new')} data-testid="new-service">
             <Plus className="size-4" aria-hidden /> New service
           </Button>
         }
       />
-      {services.isLoading && <Spinner />}
-      {services.isError && (
+
+      {services.isError ? (
         <ErrorState message={services.error.message} onRetry={() => services.refetch()} />
-      )}
-      {services.data && services.data.length === 0 && (
-        <EmptyState title="No services yet" description="Create your first service." />
-      )}
-      {services.data && services.data.length > 0 && (
-        <Card className="overflow-x-auto">
-          <table className="w-full text-sm" data-testid="services-table">
-            <thead className="border-b border-line text-left text-xs uppercase text-muted">
-              <tr>
-                <th className="px-4 py-3 font-medium">Service</th>
-                <th className="px-4 py-3 font-medium">Duration</th>
-                <th className="px-4 py-3 font-medium">Price</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-subtle">
-              {services.data.map((s) => (
-                <tr key={s.id} data-testid={`service-row-${slugify(s.name)}`}>
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-ink">{s.name}</p>
-                    {s.description && <p className="text-xs text-muted">{s.description}</p>}
-                  </td>
-                  <td className="px-4 py-3 text-ink-soft">{formatDuration(s.durationMinutes)}</td>
-                  <td className="px-4 py-3 font-medium text-ink">{formatPrice(s.price)}</td>
-                  <td className="px-4 py-3">
-                    <span className={s.active ? 'text-moss' : 'text-faint'}>
-                      {s.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditing(s)}
-                        aria-label={`Edit ${s.name}`}
-                        data-testid="edit-service"
-                      >
-                        <Pencil className="size-4" aria-hidden />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        aria-label={`Delete ${s.name}`}
-                        data-testid="delete-service"
-                        onClick={() => {
-                          if (
-                            confirm(
-                              `Delete "${s.name}"? Services with appointments will be deactivated instead.`,
-                            )
-                          )
-                            remove.mutate(s.id);
-                        }}
-                      >
-                        <Trash2 className="size-4" aria-hidden />
-                      </Button>
-                    </div>
-                  </td>
+      ) : services.isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }, (_, i) => (
+            <Skeleton key={i} className="h-14 w-full" />
+          ))}
+        </div>
+      ) : services.data?.length === 0 ? (
+        <EmptyState
+          title="No services yet"
+          description="Create your first service so clients can book it."
+          icon={<Scissors className="size-5" aria-hidden />}
+          action={
+            <Button size="sm" onClick={() => setEditing('new')}>
+              New service
+            </Button>
+          }
+        />
+      ) : (
+        <>
+          <p className="mb-3 text-[13px] text-muted">
+            <span className="font-bold text-ink">{activeCount}</span> of {services.data?.length}{' '}
+            services bookable online
+          </p>
+          <div data-testid="services-table">
+            <Table>
+              <thead>
+                <tr>
+                  <Th>Service</Th>
+                  <Th>Duration</Th>
+                  <Th className="text-right">Price</Th>
+                  <Th>Offered by</Th>
+                  <Th>Availability</Th>
+                  <Th className="w-24">
+                    <span className="sr-only">Actions</span>
+                  </Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
+              </thead>
+              <tbody>
+                {services.data?.map((s) => {
+                  const people = offeredBy(s.id);
+                  return (
+                    <tr
+                      key={s.id}
+                      data-testid={`service-row-${slugify(s.name)}`}
+                      className={s.active ? undefined : 'text-muted'}
+                    >
+                      <Td className="max-w-sm">
+                        <p className="font-semibold text-ink">{s.name}</p>
+                        {s.description && (
+                          <p className="mt-0.5 line-clamp-2 text-[13px] text-muted">
+                            {s.description}
+                          </p>
+                        )}
+                      </Td>
+                      <Td className="whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 text-ink-soft">
+                          <Clock className="size-3.5 text-faint" aria-hidden />
+                          {formatDuration(s.durationMinutes)}
+                        </span>
+                      </Td>
+                      <Td className="tabular text-right font-semibold whitespace-nowrap text-ink">
+                        {formatPrice(s.price)}
+                      </Td>
+                      <Td>
+                        {people.length === 0 ? (
+                          <span className="text-[13px] text-faint">Nobody yet</span>
+                        ) : (
+                          <span className="flex items-center">
+                            {people.map((p) => (
+                              <span key={p.id} className="-ml-1.5 first:ml-0" title={p.name}>
+                                <span className="block rounded-full ring-2 ring-surface">
+                                  <Avatar name={p.name} color={p.color} size="sm" />
+                                </span>
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                      </Td>
+                      <Td>
+                        {s.active ? <Badge tone="forest">Bookable</Badge> : <Badge>Hidden</Badge>}
+                      </Td>
+                      <Td>
+                        <div className="flex justify-end gap-0.5">
+                          <IconButton
+                            label={`Edit ${s.name}`}
+                            size="sm"
+                            onClick={() => setEditing(s)}
+                            data-testid="edit-service"
+                          >
+                            <Pencil className="size-4" aria-hidden />
+                          </IconButton>
+                          <IconButton
+                            label={`Delete ${s.name}`}
+                            size="sm"
+                            onClick={() => {
+                              remove.reset();
+                              setDeleting(s);
+                            }}
+                            data-testid="delete-service"
+                          >
+                            <Trash2 className="size-4" aria-hidden />
+                          </IconButton>
+                        </div>
+                      </Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </div>
+        </>
       )}
+
       <Modal
         open={editing !== null}
         onClose={() => setEditing(null)}
         title={editing === 'new' ? 'New service' : 'Edit service'}
+        description="Duration defines which time slots clients can book."
         testId="service-modal"
       >
         {editing !== null && (
@@ -135,6 +199,16 @@ export default function ServicesPage() {
           />
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={!!deleting}
+        title={`Delete ${deleting?.name ?? 'service'}?`}
+        message="Services that already have appointments are hidden from online booking instead of being deleted, so your history stays intact."
+        loading={remove.isPending}
+        error={remove.error?.message}
+        onConfirm={() => deleting && remove.mutate(deleting.id)}
+        onClose={() => setDeleting(null)}
+      />
     </>
   );
 }
@@ -170,16 +244,27 @@ function ServiceForm({ service, onDone }: { service: Service | null; onDone: () 
     <form
       onSubmit={handleSubmit((v) => save.mutate({ ...v, description: v.description || undefined }))}
       noValidate
-      className="space-y-4"
+      className="space-y-5"
       data-testid="service-form"
     >
       <Field label="Name" htmlFor="service-name" error={errors.name?.message}>
-        <Input id="service-name" invalid={!!errors.name} {...register('name')} />
+        <Input
+          id="service-name"
+          placeholder="e.g. Classic Haircut"
+          invalid={!!errors.name}
+          {...register('name')}
+        />
       </Field>
-      <Field label="Description" htmlFor="service-description">
-        <Input id="service-description" {...register('description')} />
+      <Field
+        label="Description"
+        htmlFor="service-description"
+        optional
+        error={errors.description?.message}
+        hint="Shown to clients on the booking page."
+      >
+        <Textarea id="service-description" rows={2} {...register('description')} />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         <Field
           label="Duration (minutes)"
           htmlFor="service-duration"
@@ -188,6 +273,7 @@ function ServiceForm({ service, onDone }: { service: Service | null; onDone: () 
           <Input
             id="service-duration"
             type="number"
+            inputMode="numeric"
             min={5}
             step={5}
             invalid={!!errors.durationMinutes}
@@ -198,6 +284,7 @@ function ServiceForm({ service, onDone }: { service: Service | null; onDone: () 
           <Input
             id="service-price"
             type="number"
+            inputMode="numeric"
             min={0}
             step={500}
             invalid={!!errors.price}
@@ -205,21 +292,22 @@ function ServiceForm({ service, onDone }: { service: Service | null; onDone: () 
           />
         </Field>
       </div>
-      <label className="flex items-center gap-2 text-sm text-ink-soft">
-        <input type="checkbox" className="size-4 accent-forest" {...register('active')} /> Active
-        (bookable)
-      </label>
+      <Checkbox
+        label="Bookable online"
+        description="Inactive services stay in your history but can't be booked."
+        {...register('active')}
+      />
       {save.isError && (
-        <p role="alert" className="text-sm text-danger">
+        <p role="alert" className="text-sm font-medium text-danger">
           {save.error.message}
         </p>
       )}
-      <div className="flex justify-end gap-2">
+      <div className="-mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-canvas/60 px-5 py-3">
         <Button type="button" variant="secondary" onClick={onDone}>
           Cancel
         </Button>
         <Button type="submit" loading={save.isPending} data-testid="save-service">
-          Save
+          Save service
         </Button>
       </div>
     </form>
