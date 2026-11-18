@@ -28,5 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Supertest against PostgreSQL, and web component tests with Vitest + Testing Library.
 - GitHub Actions CI (lint, typecheck, tests, build), Dockerfiles and docker-compose, Render
   Blueprint and Vercel config.
+- Design system (forest / sage / sand palette, Manrope and DM Serif Display) with a `/app/ui`
+  showcase page.
+- Appointments list with search and filters, and a reports page (revenue, occupancy,
+  cancellations, no-shows, most booked services).
+- Mobile-first booking page with an "Add to calendar" (.ics) download on confirmation.
+- Lazy-loaded admin panel to keep the public booking page light.
 
 [1.0.0]: https://github.com/lucaswsanchez/bookflow/releases/tag/v1.0.0

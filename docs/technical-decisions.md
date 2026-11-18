@@ -90,3 +90,19 @@ It runs on every Render deploy.
 **Why:** recruiters and automated E2E tests (Playwright/Postman) need a demo that always has
 realistic data, the same users, and free slots to book. Fixed slugs, names and credentials keep
 tests stable, and relative dates keep the agenda from going stale.
+
+## 8. Own design system on Tailwind tokens, metrics computed from real data
+
+**Decision:** the UI uses a small in-house component set (`apps/web/src/components/ui.tsx`) on top
+of Tailwind 4 `@theme` tokens, instead of a component library or a calendar package. Overview and
+report metrics (occupancy, revenue per day, top services) are pure functions in
+`apps/web/src/lib/metrics.ts` that aggregate the appointments returned by the existing API.
+
+**Why:** the product needed its own identity (a calm, editorial look rather than a default admin
+template) and only a handful of primitives. The agenda is a custom time grid because it has to show
+working vs. off hours per professional and place overlapping appointments side by side
+(`agenda-layout.ts`), which a generic calendar would need heavy customization for. Computing
+reports on the client kept the redesign free of backend changes, and the functions are unit-tested.
+
+**Trade-off:** reports download every appointment in the period. That is fine for a small business
+(hundreds per month). A larger tenant would need an aggregated `/reports` endpoint.

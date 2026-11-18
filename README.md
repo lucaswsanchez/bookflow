@@ -28,25 +28,34 @@
 >
 > ⏳ The API runs on Render's free tier: **the first request may take ~50s (free tier cold start)**.
 
-![BookFlow admin dashboard](docs/screenshots/dashboard.jpg)
+![BookFlow overview: revenue, next appointments, status and occupancy](docs/screenshots/dashboard.jpg)
 
-| Public booking page | Agenda (day view) |
+| Agenda (day view, one column per professional) | Public booking on a phone |
 | --- | --- |
-| ![Booking page](docs/screenshots/booking.jpg) | ![Agenda](docs/screenshots/agenda.jpg) |
+| ![Agenda](docs/screenshots/agenda.jpg) | <img src="docs/screenshots/booking-mobile.jpg" alt="Booking page on mobile" width="300" /> |
+
+![Reports: revenue, occupancy, cancellations and revenue per day](docs/screenshots/reports.jpg)
 
 ## Features
 
 **For clients (no account needed)**
-- Book in 5 steps: service → professional → day → available time → details.
+- Mobile-first booking in 4 steps: service → professional → day and time → details.
 - Only real availability is shown. It is calculated on the server from each professional's weekly
   hours, the service duration and existing bookings.
-- Each booking gets a confirmation code (e.g. `BF-7K3P9Q`).
+- Each booking gets a confirmation code (e.g. `BF-7K3P9Q`) and an "Add to calendar" (.ics) file.
+- The page is built from the business's own data (name, description, address, phone), so a
+  clinic, a tattoo studio or a gym gets its own booking page without new UI.
 
 **For the business (admin panel)**
-- Dashboard with today's and this week's appointments, estimated revenue in ARS, and the next
-  appointments.
-- Agenda in day view (time grid per professional) and week view, with a staff filter.
-- Mark appointments as confirmed, completed, cancelled or no-show.
+- Overview: revenue and appointments for today and this week, next appointments, status
+  breakdown and occupancy per professional.
+- Agenda: day view (one column per professional) and week view on a time grid, with working vs.
+  off hours, overlapping appointments side by side, status colors and a current-time line.
+- Appointments list with search (client, phone, service, code) and filters by period, status and
+  professional.
+- Reports: revenue per day, average ticket, occupancy, cancellation and no-show rates, most booked
+  services and results per professional.
+- Mark appointments as completed, no-show, cancelled or confirmed.
 - Export appointments to CSV (Excel-friendly).
 - Manage services (duration, price in ARS), staff (services offered and weekly hours with split
   shifts) and clients (search by name, phone or email).
@@ -57,14 +66,15 @@
 - No double bookings: a PostgreSQL exclusion constraint plus transactional re-validation.
 - Login rate limiting, input validation, and a consistent JSON error format.
 - REST API documented with OpenAPI/Swagger.
-- Responsive and accessible UI with loading, error and empty states, and stable `data-testid`
-  attributes for E2E testing.
+- Custom design system (tokens, components and a `/app/ui` showcase page) with a responsive,
+  accessible UI: loading, error and empty states, and stable `data-testid` attributes for E2E tests.
+- Admin screens are lazy-loaded so the public booking page stays light on phones.
 
 ## Tech Stack
 
 | Layer | Technology |
 | --- | --- |
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, TanStack Query, React Hook Form, Zod, React Router |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, TanStack Query, React Hook Form, Zod, React Router, Recharts, Lucide |
 | Backend | NestJS 11, TypeScript, Prisma ORM, class-validator, JWT, @nestjs/throttler, Luxon, Swagger |
 | Database | PostgreSQL (Supabase in production) |
 | Testing | Jest, Supertest, Vitest, Testing Library |
@@ -206,9 +216,9 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 
 | Suite | Tool | Tests |
 | --- | --- | --- |
-| API unit | Jest | 34 (19 for the availability engine, ~97% line coverage) |
+| API unit | Jest | 37 (19 for the availability engine, ~97% line coverage) |
 | API e2e | Jest + Supertest + PostgreSQL | 33 (auth, roles, CRUD, booking race condition, CSV) |
-| Web | Vitest + Testing Library | 15 |
+| Web | Vitest + Testing Library | 26 (booking and login components, metrics, periods, agenda layout, dates, .ics) |
 
 CI runs every suite on each pull request, with a PostgreSQL 16 service container for the e2e tests.
 
@@ -217,7 +227,7 @@ CI runs every suite on each pull request, with a PostgreSQL 16 service container
 The project was planned and built with an agile workflow on GitHub:
 
 - **[Kanban board](https://github.com/users/lucaswsanchez/projects/2)** with Backlog / In progress / Done columns.
-- **14 user stories** written as issues ("As a … I want … so that …"), each with acceptance criteria
+- **19 user stories** written as issues ("As a … I want … so that …"), each with acceptance criteria
   as a checklist, labels (`feature`, `test`, `docs`, `ci`) and a milestone (**MVP** or **Polish**).
 - **One branch and one pull request per story**, with Conventional Commits (`feat:`, `test:`,
   `docs:`, `ci:`). Each PR closes its issue with `Closes #N` and is squash-merged after CI passes.
@@ -232,6 +242,7 @@ The project was planned and built with an agile workflow on GitHub:
 - [ ] "Any professional" option when booking
 - [ ] Typed API client generated from the OpenAPI spec
 - [ ] Rate limiting on the public booking endpoint
+- [ ] Per-business accent color and logo upload
 
 ## Lessons Learned / Technical Decisions
 
