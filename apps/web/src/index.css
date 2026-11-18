@@ -1,23 +1,107 @@
 @import 'tailwindcss';
 
+/*
+ * BookFlow design tokens.
+ * Warm paper background, deep forest green as the single strong accent, sage and sand as
+ * supporting tones. Everything else is ink on paper with hairline borders.
+ */
 @theme {
   --font-sans:
-    'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d2fe;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
-  --color-brand-800: #3730a3;
-  --color-brand-900: #312e81;
+    'Manrope Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'DM Serif Display', ui-serif, Georgia, serif;
+
+  --color-canvas: #f7f6f2;
+  --color-surface: #ffffff;
+  --color-subtle: #f1f0ea;
+  --color-line: #e8e9e3;
+  --color-line-strong: #d6d8cf;
+
+  --color-ink: #202923;
+  --color-ink-soft: #3d4740;
+  --color-muted: #758078;
+  --color-faint: #a3aaa4;
+
+  --color-forest: #173d32;
+  --color-forest-deep: #0f2c24;
+  --color-forest-50: #edf3ef;
+  --color-forest-100: #dbe7df;
+
+  --color-moss: #54856b;
+  --color-moss-50: #eaf1ec;
+
+  --color-sage: #a4b99c;
+  --color-sage-50: #f0f4ee;
+  --color-sage-100: #e2eadd;
+
+  --color-sand: #d8bfa5;
+  --color-sand-50: #f8f2ec;
+  --color-sand-100: #f1e6da;
+  --color-sand-700: #8a6440;
+
+  --color-danger: #a8432f;
+  --color-danger-50: #f8ebe7;
+  --color-danger-100: #f0d5ce;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+
+  --shadow-soft: 0 1px 2px rgb(32 41 35 / 0.04), 0 1px 1px rgb(32 41 35 / 0.03);
+  --shadow-pop: 0 12px 32px -12px rgb(23 61 50 / 0.25), 0 2px 6px rgb(32 41 35 / 0.06);
+
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-rise: rise 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 @layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-canvas text-ink antialiased;
+    font-feature-settings: 'ss01', 'cv11';
   }
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-brand-600;
+    @apply outline-2 outline-offset-2 outline-forest;
+  }
+  ::selection {
+    @apply bg-sage-100 text-forest;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility eyebrow {
+  @apply text-[11px] font-semibold tracking-[0.08em] text-muted uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

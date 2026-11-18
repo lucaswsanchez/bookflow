@@ -6,7 +6,7 @@ import { Card, EmptyState, ErrorState, Spinner, StatusBadge } from '../../compon
 import { api } from '../../lib/api';
 import { formatDay, formatPrice, formatTime, toLocalDate } from '../../lib/format';
 import type { DashboardSummary } from '../../lib/types';
-import { PageHeader } from './AdminLayout';
+import { PageHeader } from '../../components/ui';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -59,8 +59,8 @@ export default function DashboardPage() {
 
           <Card className="p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-semibold text-slate-900">Next appointments</h2>
-              <Link to="/app/agenda" className="text-sm font-medium text-brand-700 hover:underline">
+              <h2 className="font-semibold text-ink">Next appointments</h2>
+              <Link to="/app/agenda" className="text-sm font-medium text-forest hover:underline">
                 Open agenda
               </Link>
             </div>
@@ -70,7 +70,7 @@ export default function DashboardPage() {
                 description="New bookings will show up here."
               />
             ) : (
-              <ul className="divide-y divide-slate-100" data-testid="upcoming-list">
+              <ul className="divide-y divide-subtle" data-testid="upcoming-list">
                 {summary.data.upcoming.map((a) => (
                   <li
                     key={a.id}
@@ -78,10 +78,10 @@ export default function DashboardPage() {
                     data-testid="upcoming-item"
                   >
                     <div className="w-20 shrink-0 text-sm">
-                      <p className="font-semibold text-slate-900">
+                      <p className="font-semibold text-ink">
                         {formatTime(a.startsAt, summary.data.timezone)}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted">
                         {formatDay(toLocalDate(new Date(a.startsAt), summary.data.timezone))}
                       </p>
                     </div>
@@ -91,8 +91,8 @@ export default function DashboardPage() {
                       aria-hidden
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-slate-900">{a.client.name}</p>
-                      <p className="truncate text-sm text-slate-500">
+                      <p className="truncate font-medium text-ink">{a.client.name}</p>
+                      <p className="truncate text-sm text-muted">
                         {a.service.name} · {a.staff.name}
                       </p>
                     </div>
@@ -123,14 +123,14 @@ function Stat({
 }) {
   return (
     <Card className="p-5">
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Icon className="size-4 text-brand-600" />
+      <div className="flex items-center gap-2 text-sm text-muted">
+        <Icon className="size-4 text-forest" />
         {label}
       </div>
-      <p className="mt-2 text-3xl font-bold text-slate-900" data-testid={testId}>
+      <p className="mt-2 text-3xl font-bold text-ink" data-testid={testId}>
         {value}
       </p>
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
     </Card>
   );
 }

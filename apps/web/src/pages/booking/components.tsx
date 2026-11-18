@@ -28,9 +28,9 @@ export function StepIndicator({ current }: { current: number }) {
             <span
               className={clsx(
                 'grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold',
-                done && 'bg-brand-600 text-white',
-                active && 'bg-brand-100 text-brand-700 ring-2 ring-brand-600',
-                !done && !active && 'bg-slate-100 text-slate-500',
+                done && 'bg-forest text-white',
+                active && 'bg-forest-100 text-forest ring-2 ring-forest',
+                !done && !active && 'bg-subtle text-muted',
               )}
             >
               {done ? <Check className="size-4" aria-hidden /> : i + 1}
@@ -38,12 +38,12 @@ export function StepIndicator({ current }: { current: number }) {
             <span
               className={clsx(
                 'hidden text-sm sm:block',
-                active ? 'font-medium text-slate-900' : 'text-slate-500',
+                active ? 'font-medium text-ink' : 'text-muted',
               )}
             >
               {label}
             </span>
-            {i < STEPS.length - 1 && <span className="h-px flex-1 bg-slate-200" aria-hidden />}
+            {i < STEPS.length - 1 && <span className="h-px flex-1 bg-line" aria-hidden />}
           </li>
         );
       })}
@@ -74,16 +74,14 @@ export function ServiceList({
             type="button"
             onClick={() => onSelect(s)}
             data-testid={`service-option-${slugify(s.name)}`}
-            className="group flex h-full w-full flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-brand-500 hover:shadow-md"
+            className="group flex h-full w-full flex-col gap-1 rounded-lg border border-line bg-white p-4 text-left transition hover:border-forest hover:shadow-md"
           >
             <span className="flex items-start justify-between gap-2">
-              <span className="font-medium text-slate-900 group-hover:text-brand-700">
-                {s.name}
-              </span>
-              <span className="shrink-0 font-semibold text-slate-900">{formatPrice(s.price)}</span>
+              <span className="font-medium text-ink group-hover:text-forest">{s.name}</span>
+              <span className="shrink-0 font-semibold text-ink">{formatPrice(s.price)}</span>
             </span>
-            {s.description && <span className="text-sm text-slate-500">{s.description}</span>}
-            <span className="mt-auto inline-flex items-center gap-1 pt-2 text-xs text-slate-500">
+            {s.description && <span className="text-sm text-muted">{s.description}</span>}
+            <span className="mt-auto inline-flex items-center gap-1 pt-2 text-xs text-muted">
               <Clock className="size-3.5" aria-hidden /> {formatDuration(s.durationMinutes)}
             </span>
           </button>
@@ -116,7 +114,7 @@ export function StaffList({
             type="button"
             onClick={() => onSelect(s)}
             data-testid={`staff-option-${slugify(s.name)}`}
-            className="flex w-full flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white p-4 text-center transition hover:border-brand-500 hover:shadow-md"
+            className="flex w-full flex-col items-center gap-2 rounded-lg border border-line bg-white p-4 text-center transition hover:border-forest hover:shadow-md"
           >
             <span
               className="grid size-12 place-items-center rounded-full text-lg font-semibold text-white"
@@ -129,8 +127,8 @@ export function StaffList({
                 .join('')
                 .slice(0, 2)}
             </span>
-            <span className="font-medium text-slate-900">{s.name}</span>
-            {s.title && <span className="text-xs text-slate-500">{s.title}</span>}
+            <span className="font-medium text-ink">{s.name}</span>
+            {s.title && <span className="text-xs text-muted">{s.title}</span>}
           </button>
         </li>
       ))}
@@ -165,10 +163,10 @@ export function DayPicker({
             onClick={() => onSelect(d)}
             data-testid={`day-option-${d}`}
             className={clsx(
-              'flex min-w-16 flex-col items-center rounded-xl border px-3 py-2 text-sm transition',
+              'flex min-w-16 flex-col items-center rounded-lg border px-3 py-2 text-sm transition',
               active
-                ? 'border-brand-600 bg-brand-600 text-white'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-brand-400',
+                ? 'border-forest bg-forest text-white'
+                : 'border-line bg-white text-ink-soft hover:border-brand-400',
             )}
           >
             <span className="text-xs uppercase opacity-80">
@@ -231,8 +229,8 @@ export function SlotPicker({
             className={clsx(
               'w-full rounded-lg border px-2 py-2 text-sm font-medium transition',
               selected === slot.start
-                ? 'border-brand-600 bg-brand-600 text-white'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-brand-500 hover:text-brand-700',
+                ? 'border-forest bg-forest text-white'
+                : 'border-line bg-white text-ink-soft hover:border-forest hover:text-forest',
             )}
           >
             {slot.time}
@@ -309,7 +307,7 @@ export function ClientDetailsForm({
       {error && (
         <p
           role="alert"
-          className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+          className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger"
           data-testid="booking-error"
         >
           {error}

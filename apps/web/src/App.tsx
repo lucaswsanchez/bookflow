@@ -9,6 +9,7 @@ import ClientsPage from './pages/admin/ClientsPage';
 import DashboardPage from './pages/admin/DashboardPage';
 import ServicesPage from './pages/admin/ServicesPage';
 import StaffPage from './pages/admin/StaffPage';
+import UiShowcasePage from './pages/admin/UiShowcasePage';
 import BookingPage from './pages/booking/BookingPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -29,9 +30,9 @@ function NotFound() {
   return (
     <main className="grid min-h-screen place-items-center px-4 text-center">
       <div>
-        <p className="text-sm font-semibold text-brand-600">404</p>
+        <p className="text-sm font-semibold text-forest">404</p>
         <h1 className="mt-2 text-2xl font-bold">Page not found</h1>
-        <Link to="/" className="mt-4 inline-block text-brand-700 hover:underline">
+        <Link to="/" className="mt-4 inline-block text-forest hover:underline">
           Go home
         </Link>
       </div>
@@ -58,6 +59,7 @@ export default function App() {
             >
               <Route index element={<DashboardPage />} />
               <Route path="agenda" element={<AgendaPage />} />
+              <Route path="ui" element={<UiShowcasePage />} />
               <Route
                 path="services"
                 element={
