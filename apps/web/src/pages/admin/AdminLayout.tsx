@@ -1,8 +1,10 @@
 import clsx from 'clsx';
 import {
   ArrowUpRight,
+  BarChart3,
   CalendarDays,
   LayoutGrid,
+  ListChecks,
   LogOut,
   Menu,
   Scissors,
@@ -30,6 +32,19 @@ const NAV: { title: string; items: NavItem[] }[] = [
     items: [
       { to: '/app', label: 'Overview', icon: LayoutGrid, testId: 'nav-dashboard', end: true },
       { to: '/app/agenda', label: 'Agenda', icon: CalendarDays, testId: 'nav-agenda' },
+      {
+        to: '/app/appointments',
+        label: 'Appointments',
+        icon: ListChecks,
+        testId: 'nav-appointments',
+      },
+      {
+        to: '/app/reports',
+        label: 'Reports',
+        icon: BarChart3,
+        testId: 'nav-reports',
+        adminOnly: true,
+      },
     ],
   },
   {

@@ -14,7 +14,8 @@ import {
   Select,
   Skeleton,
 } from '../../components/ui';
-import { api, apiFetch } from '../../lib/api';
+import { api } from '../../lib/api';
+import { downloadAppointmentsCsv } from '../../lib/download';
 import {
   addDays,
   DEFAULT_TZ,
@@ -134,13 +135,7 @@ export default function AgendaPage() {
   const exportCsv = async () => {
     setExporting(true);
     try {
-      const res = await apiFetch('/appointments/export', { query: { from, to, staffId } });
-      const url = URL.createObjectURL(await res.blob());
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `bookflow-appointments-${from}-to-${to}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await downloadAppointmentsCsv({ from, to, staffId });
     } finally {
       setExporting(false);
     }
