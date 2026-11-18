@@ -17,7 +17,7 @@ import type { AppointmentStatus } from '../lib/types';
 /* Buttons                                                                                    */
 /* ------------------------------------------------------------------------------------------ */
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'subtle';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'destructive' | 'subtle';
 type Size = 'sm' | 'md' | 'lg';
 
 const BUTTON_VARIANTS: Record<Variant, string> = {
@@ -26,6 +26,7 @@ const BUTTON_VARIANTS: Record<Variant, string> = {
   subtle: 'bg-subtle text-ink hover:bg-line',
   ghost: 'text-ink-soft hover:bg-subtle hover:text-ink',
   danger: 'border border-danger-100 bg-surface text-danger hover:bg-danger-50',
+  destructive: 'bg-danger text-white hover:brightness-95',
 };
 
 const BUTTON_SIZES: Record<Size, string> = {
@@ -354,7 +355,7 @@ export function Checkbox({
   label,
   description,
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: ReactNode; description?: ReactNode }) {
+}: React.ComponentProps<'input'> & { label: ReactNode; description?: ReactNode }) {
   return (
     <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink">
       <input
@@ -640,5 +641,57 @@ export function Modal({
         )}
       </div>
     </div>
+  );
+}
+
+/** Confirmation dialog for destructive actions (replaces window.confirm). */
+export function ConfirmDialog({
+  open,
+  title,
+  message,
+  confirmLabel = 'Delete',
+  loading,
+  error,
+  onConfirm,
+  onClose,
+}: {
+  open: boolean;
+  title: string;
+  message: ReactNode;
+  confirmLabel?: string;
+  loading?: boolean;
+  error?: string | null;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      testId="confirm-dialog"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            loading={loading}
+            onClick={onConfirm}
+            data-testid="confirm-action"
+          >
+            {confirmLabel}
+          </Button>
+        </>
+      }
+    >
+      <p className="text-sm text-ink-soft">{message}</p>
+      {error && (
+        <p role="alert" className="mt-3 text-sm font-medium text-danger">
+          {error}
+        </p>
+      )}
+    </Modal>
   );
 }
