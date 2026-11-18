@@ -160,7 +160,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
 
   const [name, setName] = useState(staff?.name ?? '');
   const [title, setTitle] = useState(staff?.title ?? '');
-  const [color, setColor] = useState(staff?.color ?? '#4f46e5');
+  const [color, setColor] = useState(staff?.color ?? '#2f6b55');
   const [active, setActive] = useState(staff?.active ?? true);
   const [serviceIds, setServiceIds] = useState<string[]>(staff?.services?.map((s) => s.id) ?? []);
   const [ranges, setRanges] = useState<Range[]>(

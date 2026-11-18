@@ -148,9 +148,10 @@ export function Stat({
   tone?: 'default' | 'accent';
 }) {
   return (
-    <div data-testid={testId} className="min-w-0">
+    <div className="min-w-0">
       <p className="eyebrow">{label}</p>
       <p
+        data-testid={testId}
         className={clsx(
           'tabular mt-2 truncate text-[28px] leading-none font-bold tracking-tight',
           tone === 'accent' ? 'text-forest' : 'text-ink',
