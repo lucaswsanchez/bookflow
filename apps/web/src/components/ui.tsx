@@ -476,11 +476,13 @@ export function Avatar({
   );
 }
 
-/** Ruled table. Wraps in a horizontal scroller on small screens. */
+/** Bordered table on a white surface. Scrolls horizontally on small screens. */
 export function Table({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={clsx('-mx-4 overflow-x-auto sm:mx-0', className)}>
-      <table className="w-full min-w-[640px] border-collapse text-sm">{children}</table>
+    <div className={clsx('overflow-x-auto rounded-lg border border-line bg-surface', className)}>
+      <table className="w-full min-w-[640px] border-collapse text-sm [&_tbody_tr:last-child>td]:border-b-0">
+        {children}
+      </table>
     </div>
   );
 }
@@ -490,7 +492,7 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
     <th
       scope="col"
       className={clsx(
-        'eyebrow border-b border-line px-4 pb-2.5 text-left font-semibold first:pl-4 sm:first:pl-0 last:pr-4 sm:last:pr-0',
+        'eyebrow border-b border-line bg-canvas/50 px-4 py-2.5 text-left font-semibold',
         className,
       )}
     >
@@ -501,14 +503,7 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
 
 export function Td({ children, className }: { children?: ReactNode; className?: string }) {
   return (
-    <td
-      className={clsx(
-        'border-b border-line px-4 py-3 align-middle first:pl-4 sm:first:pl-0 last:pr-4 sm:last:pr-0',
-        className,
-      )}
-    >
-      {children}
-    </td>
+    <td className={clsx('border-b border-line px-4 py-3 align-middle', className)}>{children}</td>
   );
 }
 
