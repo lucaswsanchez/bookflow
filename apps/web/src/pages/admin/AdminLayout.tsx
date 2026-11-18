@@ -1,95 +1,191 @@
 import clsx from 'clsx';
 import {
+  ArrowUpRight,
   CalendarDays,
-  ExternalLink,
-  LayoutDashboard,
+  LayoutGrid,
   LogOut,
+  Menu,
   Scissors,
   UserRound,
   Users,
+  X,
 } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
-import { Button, Logo } from '../../components/ui';
+import { Avatar, BusinessMark, IconButton, Logo } from '../../components/ui';
 
-const NAV = [
-  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, testId: 'nav-dashboard', end: true },
-  { to: '/app/agenda', label: 'Agenda', icon: CalendarDays, testId: 'nav-agenda' },
+interface NavItem {
+  to: string;
+  label: string;
+  icon: typeof CalendarDays;
+  testId: string;
+  end?: boolean;
+  adminOnly?: boolean;
+}
+
+const NAV: { title: string; items: NavItem[] }[] = [
   {
-    to: '/app/services',
-    label: 'Services',
-    icon: Scissors,
-    testId: 'nav-services',
-    adminOnly: true,
+    title: 'Workspace',
+    items: [
+      { to: '/app', label: 'Overview', icon: LayoutGrid, testId: 'nav-dashboard', end: true },
+      { to: '/app/agenda', label: 'Agenda', icon: CalendarDays, testId: 'nav-agenda' },
+    ],
   },
-  { to: '/app/staff', label: 'Staff', icon: UserRound, testId: 'nav-staff', adminOnly: true },
-  { to: '/app/clients', label: 'Clients', icon: Users, testId: 'nav-clients', adminOnly: true },
+  {
+    title: 'Manage',
+    items: [
+      {
+        to: '/app/services',
+        label: 'Services',
+        icon: Scissors,
+        testId: 'nav-services',
+        adminOnly: true,
+      },
+      { to: '/app/staff', label: 'Staff', icon: UserRound, testId: 'nav-staff', adminOnly: true },
+      { to: '/app/clients', label: 'Clients', icon: Users, testId: 'nav-clients', adminOnly: true },
+    ],
+  },
 ];
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
-  const items = NAV.filter((n) => !n.adminOnly || user?.role === 'ADMIN');
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+
+  // Close the mobile drawer on navigation.
+  useEffect(() => setOpen(false), [location.pathname]);
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
-      <aside className="border-b border-line bg-white lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
-        <div className="flex items-center justify-between px-4 py-4 lg:block lg:px-5">
-          <Logo />
-          <p
-            className="mt-1 hidden truncate text-xs text-muted lg:block"
-            title={user?.business.name}
-          >
-            {user?.business.name}
-          </p>
+    <div className="min-h-screen lg:grid lg:grid-cols-[256px_1fr]">
+      {/* Mobile top bar */}
+      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-canvas/95 px-3 backdrop-blur lg:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <IconButton label="Open menu" onClick={() => setOpen(true)} data-testid="menu-button">
+            <Menu className="size-5" aria-hidden />
+          </IconButton>
+          <BusinessMark name={user?.business.name ?? ''} size="sm" />
+          <span className="truncate text-sm font-bold">{shortName(user?.business.name)}</span>
         </div>
-        <nav aria-label="Main" className="flex gap-1 overflow-x-auto px-2 pb-2 lg:flex-col lg:px-3">
-          {items.map(({ to, label, icon: Icon, testId, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              data-testid={testId}
-              className={({ isActive }) =>
-                clsx(
-                  'flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-forest-50 text-forest'
-                    : 'text-ink-soft hover:bg-subtle hover:text-ink',
-                )
-              }
-            >
-              <Icon className="size-4" aria-hidden />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="hidden space-y-3 border-t border-line p-4 lg:absolute lg:inset-x-0 lg:bottom-0 lg:block">
+        <IconButton
+          label="Log out"
+          onClick={() => void logout()}
+          data-testid="logout-button-mobile"
+        >
+          <LogOut className="size-4" aria-hidden />
+        </IconButton>
+      </div>
+
+      {/* Drawer backdrop (mobile) */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 animate-fade-in bg-ink/30 lg:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden
+        />
+      )}
+
+      <aside
+        className={clsx(
+          'fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col border-r border-line bg-surface transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-auto lg:translate-x-0',
+          open ? 'translate-x-0 shadow-pop' : '-translate-x-full',
+        )}
+        aria-label="Sidebar"
+      >
+        <div className="flex items-center gap-3 px-4 pt-5 pb-4">
+          <BusinessMark name={user?.business.name ?? ''} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold" title={user?.business.name}>
+              {shortName(user?.business.name)}
+            </p>
+            <p className="truncate text-xs text-muted">{locationOf(user?.business.name)}</p>
+          </div>
+          <IconButton
+            label="Close menu"
+            size="sm"
+            onClick={() => setOpen(false)}
+            className="lg:hidden"
+          >
+            <X className="size-4" aria-hidden />
+          </IconButton>
+        </div>
+
+        <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-2">
+          {NAV.map((group) => {
+            const items = group.items.filter((n) => !n.adminOnly || user?.role === 'ADMIN');
+            if (items.length === 0) return null;
+            return (
+              <div key={group.title} className="mb-5">
+                <p className="eyebrow px-3 pb-2">{group.title}</p>
+                <ul className="space-y-0.5">
+                  {items.map(({ to, label, icon: Icon, testId, end }) => (
+                    <li key={to}>
+                      <NavLink
+                        to={to}
+                        end={end}
+                        data-testid={testId}
+                        className={({ isActive }) =>
+                          clsx(
+                            'group flex h-9 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors',
+                            isActive
+                              ? 'bg-forest text-white'
+                              : 'text-ink-soft hover:bg-subtle hover:text-ink',
+                          )
+                        }
+                      >
+                        <Icon className="size-4 shrink-0" aria-hidden />
+                        {label}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+
           <a
             href={`/book/${user?.business.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 text-sm text-ink-soft hover:text-forest"
+            className="mx-0 mt-2 flex items-center justify-between rounded-md border border-dashed border-line-strong px-3 py-2.5 text-[13px] font-semibold text-ink-soft transition-colors hover:border-forest hover:text-forest"
             data-testid="view-booking-page"
           >
-            <ExternalLink className="size-4" aria-hidden /> Public booking page
+            Public booking page
+            <ArrowUpRight className="size-4" aria-hidden />
           </a>
-          <UserBox />
+        </nav>
+
+        <div className="border-t border-line p-3">
+          <div className="flex items-center gap-3 rounded-md px-2 py-1.5">
+            <Avatar name={user?.name ?? '?'} color="#54856b" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold" data-testid="current-user-name">
+                {user?.name}
+              </p>
+              <p className="text-xs text-muted" data-testid="current-user-role">
+                {user?.role === 'ADMIN' ? 'Administrator' : 'Staff'}
+              </p>
+            </div>
+            <IconButton
+              label="Log out"
+              size="sm"
+              onClick={() => void logout()}
+              data-testid="logout-button"
+            >
+              <LogOut className="size-4" aria-hidden />
+            </IconButton>
+          </div>
+          <div className="mt-2 flex items-center justify-between px-2 text-[11px] text-faint">
+            <Logo className="scale-[0.8] origin-left opacity-70" />
+            <NavLink to="/app/ui" className="hover:text-ink" data-testid="nav-ui-kit">
+              UI kit
+            </NavLink>
+          </div>
         </div>
       </aside>
 
       <div className="min-w-0">
-        <div className="flex items-center justify-between border-b border-line bg-white px-4 py-2 lg:hidden">
-          <span className="text-sm text-ink-soft">{user?.name}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => void logout()}
-            data-testid="logout-button-mobile"
-          >
-            <LogOut className="size-4" aria-hidden /> Log out
-          </Button>
-        </div>
-        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
+        <main className="mx-auto max-w-[1240px] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
           <Outlet />
         </main>
       </div>
@@ -97,27 +193,12 @@ export default function AdminLayout() {
   );
 }
 
-function UserBox() {
-  const { user, logout } = useAuth();
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-ink" data-testid="current-user-name">
-          {user?.name}
-        </p>
-        <p className="text-xs text-muted" data-testid="current-user-role">
-          {user?.role === 'ADMIN' ? 'Administrator' : 'Staff'}
-        </p>
-      </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => void logout()}
-        aria-label="Log out"
-        data-testid="logout-button"
-      >
-        <LogOut className="size-4" aria-hidden />
-      </Button>
-    </div>
-  );
+/** "Barbería Costanera — Corrientes" → "Barbería Costanera" */
+function shortName(name = '') {
+  return name.split(/\s+[—–-]\s+/)[0];
+}
+
+/** "Barbería Costanera — Corrientes" → "Corrientes" */
+function locationOf(name = '') {
+  return name.split(/\s+[—–-]\s+/)[1] ?? 'Business workspace';
 }

@@ -1,38 +1,45 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { ChevronLeft, ChevronRight, Download, Phone } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/useAuth';
+import { AppointmentDetail } from '../../components/AppointmentDetail';
 import {
+  Avatar,
   Button,
-  Card,
-  EmptyState,
   ErrorState,
-  Modal,
-  Spinner,
-  StatusBadge,
+  IconButton,
+  PageHeader,
+  Segmented,
+  Select,
+  Skeleton,
 } from '../../components/ui';
 import { api, apiFetch } from '../../lib/api';
 import {
   addDays,
   DEFAULT_TZ,
   formatDay,
-  formatPrice,
   formatTime,
   minutesOfDay,
   minutesToTime,
   startOfWeek,
   toLocalDate,
 } from '../../lib/format';
-import { STATUS_LABELS } from '../../lib/status';
+import { STATUS_LABELS, STATUS_TONES } from '../../lib/status';
 import type { Appointment, AppointmentStatus, StaffMember } from '../../lib/types';
-import { PageHeader } from '../../components/ui';
+import { layoutLanes, type Positioned } from './agenda-layout';
 
 type View = 'day' | 'week';
-const DAY_START = 8 * 60;
-const DAY_END = 21 * 60;
-const PX_PER_MIN = 1.1;
-const STATUSES: AppointmentStatus[] = ['CONFIRMED', 'COMPLETED', 'NO_SHOW', 'CANCELLED'];
+const PX_PER_MIN = 1.4;
+const LEGEND: AppointmentStatus[] = ['CONFIRMED', 'COMPLETED', 'NO_SHOW', 'CANCELLED'];
+
+interface Column {
+  key: string;
+  date: string;
+  staff: StaffMember[];
+  items: Appointment[];
+  header: React.ReactNode;
+}
 
 export default function AgendaPage() {
   const { user } = useAuth();
@@ -53,26 +60,74 @@ export default function AgendaPage() {
     [from, view],
   );
 
-  const staff = useQuery({
-    queryKey: ['staff'],
-    queryFn: () => api<StaffMember[]>('/staff'),
-    enabled: isAdmin,
-  });
+  const staff = useQuery({ queryKey: ['staff'], queryFn: () => api<StaffMember[]>('/staff') });
   const appointments = useQuery({
     queryKey: ['appointments', from, to, staffId],
     queryFn: () => api<Appointment[]>('/appointments', { query: { from, to, staffId } }),
   });
 
-  const queryClient = useQueryClient();
-  const updateStatus = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: AppointmentStatus }) =>
-      api<Appointment>(`/appointments/${id}/status`, { method: 'PATCH', body: { status } }),
-    onSuccess: (updated) => {
-      setSelected(updated);
-      void queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    },
-  });
+  // Whose working hours are on screen: everyone, the filtered person, or the STAFF user.
+  const people = useMemo(() => {
+    const all = staff.data ?? [];
+    if (!isAdmin) return all.filter((s) => s.id === user?.staffId);
+    return staffId ? all.filter((s) => s.id === staffId) : all;
+  }, [staff.data, isAdmin, staffId, user?.staffId]);
+
+  const visible = useMemo(() => appointments.data ?? [], [appointments.data]);
+
+  const columns: Column[] = useMemo(() => {
+    if (view === 'day' && people.length > 1) {
+      return people.map((s) => {
+        const items = visible.filter((a) => a.staff.id === s.id);
+        return {
+          key: s.id,
+          date,
+          staff: [s],
+          items,
+          header: (
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Avatar name={s.name} color={s.color} size="sm" />
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-bold text-ink">{s.name}</p>
+                <p className="text-[11px] text-muted">
+                  {countActive(items)} appointment{countActive(items) === 1 ? '' : 's'}
+                </p>
+              </div>
+            </div>
+          ),
+        };
+      });
+    }
+    return days.map((d) => {
+      const items = visible.filter((a) => toLocalDate(new Date(a.startsAt), tz) === d);
+      return {
+        key: d,
+        date: d,
+        staff: people,
+        items,
+        header: (
+          <div className="flex items-center gap-2">
+            <span
+              className={clsx(
+                'grid size-7 place-items-center rounded-full text-[13px] font-bold tabular',
+                d === today ? 'bg-forest text-white' : 'text-ink',
+              )}
+            >
+              {Number(d.slice(8))}
+            </span>
+            <div className="min-w-0 leading-tight">
+              <p className="text-[12px] font-semibold text-ink-soft">
+                {formatDay(d, { month: undefined, day: undefined })}
+              </p>
+              <p className="text-[11px] text-muted">{countActive(items)} appts</p>
+            </div>
+          </div>
+        ),
+      };
+    });
+  }, [view, people, visible, date, days, tz, today]);
+
+  const [dayStart, dayEnd] = useMemo(() => hourRange(people, visible, tz), [people, visible, tz]);
 
   const move = (dir: -1 | 1) => setDate(addDays(date, dir * (view === 'day' ? 1 : 7)));
 
@@ -91,29 +146,13 @@ export default function AgendaPage() {
     }
   };
 
-  const visible = appointments.data ?? [];
-  const columns =
-    view === 'day' && isAdmin && !staffId && staff.data
-      ? staff.data.map((s) => ({
-          key: s.id,
-          title: s.name,
-          color: s.color,
-          date,
-          items: visible.filter((a) => a.staff.id === s.id),
-        }))
-      : days.map((d) => ({
-          key: d,
-          title: formatDay(d),
-          color: undefined,
-          date: d,
-          items: visible.filter((a) => toLocalDate(new Date(a.startsAt), tz) === d),
-        }));
+  const active = countActive(visible);
 
   return (
     <>
       <PageHeader
         title="Agenda"
-        description={isAdmin ? 'All appointments across your team.' : 'Your appointments.'}
+        description={isAdmin ? 'Every appointment across your team.' : 'Your appointments.'}
         actions={
           <Button
             variant="secondary"
@@ -126,38 +165,9 @@ export default function AgendaPage() {
         }
       />
 
-      <Card className="mb-4 flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <div
-            className="inline-flex rounded-lg border border-line p-0.5"
-            role="group"
-            aria-label="View"
-          >
-            {(['day', 'week'] as View[]).map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setView(v)}
-                aria-pressed={view === v}
-                data-testid={`agenda-view-${v}`}
-                className={clsx(
-                  'rounded-md px-3 py-1.5 text-sm font-medium capitalize',
-                  view === v ? 'bg-forest text-white' : 'text-ink-soft hover:bg-subtle',
-                )}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => move(-1)}
-            aria-label="Previous"
-            data-testid="agenda-prev"
-          >
-            <ChevronLeft className="size-4" aria-hidden />
-          </Button>
+      {/* Toolbar */}
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="secondary"
             size="sm"
@@ -166,267 +176,327 @@ export default function AgendaPage() {
           >
             Today
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => move(1)}
-            aria-label="Next"
-            data-testid="agenda-next"
-          >
-            <ChevronRight className="size-4" aria-hidden />
-          </Button>
-          <span className="ml-1 text-sm font-medium text-ink" data-testid="agenda-range">
+          <div className="flex items-center">
+            <IconButton
+              label="Previous"
+              size="sm"
+              onClick={() => move(-1)}
+              data-testid="agenda-prev"
+            >
+              <ChevronLeft className="size-4" aria-hidden />
+            </IconButton>
+            <IconButton label="Next" size="sm" onClick={() => move(1)} data-testid="agenda-next">
+              <ChevronRight className="size-4" aria-hidden />
+            </IconButton>
+          </div>
+          <h2 className="text-lg font-bold tracking-tight" data-testid="agenda-range">
             {view === 'day'
-              ? formatDay(date, { month: 'long' })
+              ? formatDay(date, { weekday: 'long', month: 'long' })
               : `${formatDay(from, { weekday: undefined })} – ${formatDay(to, { weekday: undefined })}`}
-          </span>
+          </h2>
+          <label className="relative ml-1">
+            <span className="sr-only">Go to date</span>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => e.target.value && setDate(e.target.value)}
+              data-testid="agenda-date-input"
+              className="h-8 rounded-md border border-line-strong bg-surface px-2 text-[13px] text-ink-soft hover:border-faint focus:border-forest focus:ring-3 focus:ring-forest-100 focus:outline-none"
+            />
+          </label>
         </div>
-        {isAdmin && (
-          <label className="flex items-center gap-2 text-sm text-ink-soft">
-            Staff
-            <select
+        <div className="flex flex-wrap items-center gap-2">
+          {isAdmin && (
+            <Select
+              aria-label="Filter by professional"
               value={staffId}
               onChange={(e) => setStaffId(e.target.value)}
               data-testid="agenda-staff-filter"
-              className="rounded-lg border border-line-strong bg-white px-2 py-1.5 text-sm"
+              className="h-8! w-auto min-w-44 text-[13px]"
             >
-              <option value="">Everyone</option>
+              <option value="">All professionals</option>
               {staff.data?.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
                 </option>
               ))}
-            </select>
-          </label>
-        )}
-      </Card>
-
-      {appointments.isLoading ? (
-        <Spinner label="Loading agenda…" />
-      ) : appointments.isError ? (
-        <ErrorState message={appointments.error.message} onRetry={() => appointments.refetch()} />
-      ) : visible.length === 0 ? (
-        <EmptyState
-          testId="agenda-empty"
-          title="No appointments"
-          description="Nothing scheduled for this period."
-        />
-      ) : view === 'day' ? (
-        <TimeGrid columns={columns} tz={tz} onSelect={setSelected} />
-      ) : (
-        <div className="grid gap-3 md:grid-cols-7" data-testid="agenda-week">
-          {columns.map((col) => (
-            <div key={col.key} className="min-w-0">
-              <h3
-                className={clsx(
-                  'mb-2 text-sm font-semibold',
-                  col.date === today ? 'text-forest' : 'text-ink-soft',
-                )}
-              >
-                {col.title}
-              </h3>
-              <ul className="space-y-2">
-                {col.items.length === 0 && <li className="text-xs text-faint">—</li>}
-                {col.items.map((a) => (
-                  <li key={a.id}>
-                    <AppointmentCard
-                      appointment={a}
-                      tz={tz}
-                      onClick={() => setSelected(a)}
-                      compact
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            </Select>
+          )}
+          <Segmented
+            label="View"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: 'day', label: 'Day', testId: 'agenda-view-day' },
+              { value: 'week', label: 'Week', testId: 'agenda-view-week' },
+            ]}
+          />
         </div>
+      </div>
+
+      {/* Summary + legend */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-[13px]">
+        <p className="text-muted">
+          {appointments.isLoading ? (
+            'Loading…'
+          ) : active === 0 ? (
+            <span data-testid="agenda-empty">No appointments in this period.</span>
+          ) : (
+            <>
+              <span className="font-bold text-ink">{active}</span> appointment
+              {active === 1 ? '' : 's'}
+              {visible.length > active && ` · ${visible.length - active} cancelled`}
+            </>
+          )}
+        </p>
+        <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted" aria-label="Legend">
+          {LEGEND.map((s) => (
+            <li key={s} className="flex items-center gap-1.5">
+              <span className={clsx('size-2 rounded-full', STATUS_TONES[s].dot)} aria-hidden />
+              {STATUS_LABELS[s]}
+            </li>
+          ))}
+          <li className="flex items-center gap-1.5">
+            <span className="hatch size-2.5 rounded-sm border border-line" aria-hidden />
+            Off hours
+          </li>
+        </ul>
+      </div>
+
+      {appointments.isError ? (
+        <ErrorState message={appointments.error.message} onRetry={() => appointments.refetch()} />
+      ) : appointments.isLoading || staff.isLoading ? (
+        <Skeleton className="h-[560px] w-full" />
+      ) : (
+        <TimeGrid
+          columns={columns}
+          tz={tz}
+          today={today}
+          dayStart={dayStart}
+          dayEnd={dayEnd}
+          showStaff={people.length > 1 && (view === 'week' || columns.length === 1)}
+          testId={view === 'day' ? 'agenda-day' : 'agenda-week'}
+          onSelect={setSelected}
+        />
       )}
 
-      <Modal
-        open={!!selected}
-        onClose={() => setSelected(null)}
-        title="Appointment"
-        testId="appointment-modal"
-      >
-        {selected && (
-          <div className="space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-lg font-semibold text-ink">{selected.client.name}</p>
-                <a
-                  href={`tel:${selected.client.phone}`}
-                  className="inline-flex items-center gap-1 text-sm text-muted hover:text-forest"
-                >
-                  <Phone className="size-3.5" aria-hidden /> {selected.client.phone}
-                </a>
-              </div>
-              <StatusBadge status={selected.status} />
-            </div>
-            <dl className="grid grid-cols-2 gap-y-2 text-sm">
-              <dt className="text-muted">When</dt>
-              <dd className="font-medium">
-                {formatDay(toLocalDate(new Date(selected.startsAt), tz))},{' '}
-                {formatTime(selected.startsAt, tz)}–{formatTime(selected.endsAt, tz)}
-              </dd>
-              <dt className="text-muted">Service</dt>
-              <dd className="font-medium">{selected.service.name}</dd>
-              <dt className="text-muted">Professional</dt>
-              <dd className="font-medium">{selected.staff.name}</dd>
-              <dt className="text-muted">Price</dt>
-              <dd className="font-medium">{formatPrice(selected.price)}</dd>
-              <dt className="text-muted">Code</dt>
-              <dd className="font-mono font-medium">{selected.code}</dd>
-              {selected.notes && (
-                <>
-                  <dt className="text-muted">Notes</dt>
-                  <dd>{selected.notes}</dd>
-                </>
-              )}
-            </dl>
-            <div>
-              <p className="mb-2 text-sm font-medium text-ink-soft">Change status</p>
-              <div className="grid grid-cols-2 gap-2" data-testid="status-actions">
-                {STATUSES.map((s) => (
-                  <Button
-                    key={s}
-                    variant={selected.status === s ? 'primary' : 'secondary'}
-                    size="sm"
-                    disabled={selected.status === s}
-                    loading={updateStatus.isPending && updateStatus.variables?.status === s}
-                    onClick={() => updateStatus.mutate({ id: selected.id, status: s })}
-                    data-testid={`set-status-${s.toLowerCase()}`}
-                  >
-                    {STATUS_LABELS[s]}
-                  </Button>
-                ))}
-              </div>
-              {updateStatus.isError && (
-                <p role="alert" className="mt-2 text-sm text-danger">
-                  {updateStatus.error.message}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-      </Modal>
+      <AppointmentDetail appointment={selected} timeZone={tz} onClose={() => setSelected(null)} />
     </>
   );
 }
 
-interface Column {
-  key: string;
-  title: string;
-  color?: string;
-  items: Appointment[];
+const countActive = (items: Appointment[]) => items.filter((a) => a.status !== 'CANCELLED').length;
+
+/** Visible hour range: from the earliest working hour to the latest, never cutting appointments. */
+function hourRange(people: StaffMember[], items: Appointment[], tz: string): [number, number] {
+  const starts = people.flatMap((p) => p.workingHours?.map((h) => h.startMinute) ?? []);
+  const ends = people.flatMap((p) => p.workingHours?.map((h) => h.endMinute) ?? []);
+  for (const a of items) {
+    starts.push(minutesOfDay(a.startsAt, tz));
+    ends.push(minutesOfDay(a.endsAt, tz) || 24 * 60);
+  }
+  if (starts.length === 0) return [8 * 60, 20 * 60];
+  const start = Math.floor(Math.min(...starts) / 60) * 60;
+  const end = Math.ceil(Math.max(...ends) / 60) * 60;
+  return [Math.max(0, start), Math.min(24 * 60, end)];
+}
+
+function useNowMinutes(tz: string) {
+  const [now, setNow] = useState(() => minutesOfDay(new Date().toISOString(), tz));
+  useEffect(() => {
+    const id = setInterval(() => setNow(minutesOfDay(new Date().toISOString(), tz)), 60_000);
+    return () => clearInterval(id);
+  }, [tz]);
+  return now;
 }
 
 function TimeGrid({
   columns,
   tz,
+  today,
+  dayStart,
+  dayEnd,
+  showStaff,
+  testId,
   onSelect,
 }: {
   columns: Column[];
   tz: string;
+  today: string;
+  dayStart: number;
+  dayEnd: number;
+  showStaff: boolean;
+  testId: string;
   onSelect: (a: Appointment) => void;
 }) {
+  const now = useNowMinutes(tz);
   const hours: number[] = [];
-  for (let m = DAY_START; m < DAY_END; m += 60) hours.push(m);
-  const height = (DAY_END - DAY_START) * PX_PER_MIN;
+  for (let m = dayStart; m < dayEnd; m += 60) hours.push(m);
+  const height = (dayEnd - dayStart) * PX_PER_MIN;
+  const y = (minute: number) => (minute - dayStart) * PX_PER_MIN;
+  const minColumn = columns.length > 3 ? 'min-w-[120px]' : 'min-w-[200px]';
 
   return (
-    <Card className="overflow-x-auto">
-      <div className="flex min-w-[640px]" data-testid="agenda-day">
-        <div className="w-14 shrink-0 border-r border-subtle pt-10">
+    <div className="overflow-x-auto rounded-lg border border-line bg-surface" data-testid={testId}>
+      <div className="flex min-w-fit">
+        {/* Time gutter */}
+        <div className="sticky left-0 z-20 w-14 shrink-0 border-r border-line bg-surface">
+          <div className="h-14 border-b border-line" />
           <div className="relative" style={{ height }}>
             {hours.map((m) => (
               <span
                 key={m}
-                className="absolute right-2 -translate-y-1/2 text-xs text-faint"
-                style={{ top: (m - DAY_START) * PX_PER_MIN }}
+                className="tabular absolute right-2 -translate-y-1/2 bg-surface px-0.5 text-[11px] text-faint first:translate-y-0.5"
+                style={{ top: y(m) }}
               >
                 {minutesToTime(m)}
               </span>
             ))}
           </div>
         </div>
-        {columns.map((col) => (
-          <div key={col.key} className="min-w-40 flex-1 border-r border-subtle last:border-r-0">
-            <div className="flex h-10 items-center gap-2 border-b border-subtle px-3 text-sm font-medium text-ink-soft">
-              {col.color && (
-                <span
-                  className="size-2.5 rounded-full"
-                  style={{ backgroundColor: col.color }}
-                  aria-hidden
-                />
-              )}
-              {col.title}
-            </div>
-            <div className="relative" style={{ height }}>
-              {hours.map((m) => (
-                <div
-                  key={m}
-                  className="absolute inset-x-0 border-t border-subtle"
-                  style={{ top: (m - DAY_START) * PX_PER_MIN }}
-                  aria-hidden
-                />
-              ))}
-              {col.items.map((a) => {
-                const start = Math.max(minutesOfDay(a.startsAt, tz), DAY_START);
-                const end = Math.min(minutesOfDay(a.endsAt, tz), DAY_END);
-                return (
+
+        {columns.map((col) => {
+          const weekday = new Date(`${col.date}T12:00:00Z`).getUTCDay();
+          const working = col.staff.flatMap(
+            (s) => s.workingHours?.filter((h) => h.weekday === weekday) ?? [],
+          );
+          const lanes = layoutLanes(
+            col.items.map((a) => ({
+              item: a,
+              start: Math.max(minutesOfDay(a.startsAt, tz), dayStart),
+              end: Math.min(minutesOfDay(a.endsAt, tz) || 24 * 60, dayEnd),
+            })),
+          );
+          return (
+            <div
+              key={col.key}
+              className={clsx('flex-1 border-r border-line last:border-r-0', minColumn)}
+            >
+              <div
+                className={clsx(
+                  'sticky top-0 z-10 flex h-14 items-center border-b border-line px-3',
+                  col.date === today && columns.length > 1 && !showStaff
+                    ? 'bg-forest-50/60'
+                    : 'bg-surface',
+                )}
+              >
+                {col.header}
+              </div>
+              <div className="hatch relative" style={{ height }}>
+                {/* Working hours: plain background over the hatched "off hours" pattern */}
+                {working.map((h, i) => (
                   <div
-                    key={a.id}
-                    className="absolute inset-x-1"
+                    key={i}
+                    className="absolute inset-x-0 bg-surface"
                     style={{
-                      top: (start - DAY_START) * PX_PER_MIN + 1,
-                      height: Math.max((end - start) * PX_PER_MIN - 2, 22),
+                      top: y(Math.max(h.startMinute, dayStart)),
+                      height:
+                        (Math.min(h.endMinute, dayEnd) - Math.max(h.startMinute, dayStart)) *
+                        PX_PER_MIN,
                     }}
-                  >
-                    <AppointmentCard appointment={a} tz={tz} onClick={() => onSelect(a)} />
+                    aria-hidden
+                  />
+                ))}
+                {hours.map((m) => (
+                  <div key={m} aria-hidden>
+                    <div
+                      className="absolute inset-x-0 border-t border-line"
+                      style={{ top: y(m) }}
+                    />
+                    <div
+                      className="absolute inset-x-0 border-t border-dashed border-line/70"
+                      style={{ top: y(m + 30) }}
+                    />
                   </div>
-                );
-              })}
+                ))}
+
+                {lanes.map((p) => (
+                  <Block
+                    key={p.item.id}
+                    p={p}
+                    tz={tz}
+                    top={y(p.start)}
+                    height={(p.end - p.start) * PX_PER_MIN}
+                    showStaff={showStaff}
+                    onClick={() => onSelect(p.item)}
+                  />
+                ))}
+
+                {col.date === today && now >= dayStart && now <= dayEnd && (
+                  <div
+                    className="pointer-events-none absolute inset-x-0 z-10 flex items-center"
+                    style={{ top: y(now) }}
+                    data-testid="now-line"
+                    aria-hidden
+                  >
+                    <span className="-ml-1 size-2 rounded-full bg-danger" />
+                    <span className="h-px flex-1 bg-danger" />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-    </Card>
+    </div>
   );
 }
 
-function AppointmentCard({
-  appointment: a,
+function Block({
+  p,
   tz,
+  top,
+  height,
+  showStaff,
   onClick,
-  compact,
 }: {
-  appointment: Appointment;
+  p: Positioned<Appointment>;
   tz: string;
+  top: number;
+  height: number;
+  showStaff: boolean;
   onClick: () => void;
-  compact?: boolean;
 }) {
-  const cancelled = a.status === 'CANCELLED';
+  const a = p.item;
+  const short = height < 40;
+  const narrow = p.lanes > 1;
+  const width = 100 / p.lanes;
   return (
     <button
       type="button"
       onClick={onClick}
       data-testid="appointment-card"
       data-status={a.status}
+      title={`${formatTime(a.startsAt, tz)} ${a.client.name} · ${a.service.name} · ${a.staff.name} (${STATUS_LABELS[a.status]})`}
       className={clsx(
-        'h-full w-full overflow-hidden rounded-md border-l-4 bg-white px-2 py-1 text-left text-xs shadow-soft ring-1 ring-line transition hover:ring-brand-400',
-        cancelled && 'opacity-50 line-through',
-        compact && 'py-1.5',
+        'absolute overflow-hidden rounded-[5px] border-l-[3px] px-2 text-left text-[12px] leading-tight transition-[filter,box-shadow] hover:z-10 hover:shadow-pop hover:brightness-[0.98] focus-visible:z-10',
+        STATUS_TONES[a.status].block,
+        short ? 'flex items-center gap-1.5 py-0' : 'py-1.5',
       )}
-      style={{ borderLeftColor: a.staff.color }}
+      style={{
+        top: top + 1,
+        height: Math.max(height - 2, 20),
+        left: `calc(${p.lane * width}% + 3px)`,
+        width: `calc(${width}% - 6px)`,
+      }}
     >
-      <span className="font-semibold text-ink">{formatTime(a.startsAt, tz)}</span>{' '}
-      <span className="text-ink-soft">{a.client.name}</span>
-      <span className="block truncate text-muted">
-        {a.service.name}
-        {compact && ` · ${a.staff.name.split(' ')[0]}`}
+      <span className="tabular shrink-0 font-bold">{formatTime(a.startsAt, tz)}</span>
+      <span className={clsx('truncate font-semibold', !short && 'block')}>
+        {narrow ? a.client.name.split(' ')[0] : a.client.name}
       </span>
-      {a.status !== 'CONFIRMED' && <span className="sr-only">({STATUS_LABELS[a.status]})</span>}
+      {!short && (
+        <span className="mt-0.5 flex items-center gap-1 truncate font-normal opacity-80">
+          {showStaff && (
+            <span
+              className="size-1.5 shrink-0 rounded-full"
+              style={{ backgroundColor: a.staff.color }}
+              aria-hidden
+            />
+          )}
+          <span className="truncate">{a.service.name}</span>
+        </span>
+      )}
+      <span className="sr-only">({STATUS_LABELS[a.status]})</span>
     </button>
   );
 }

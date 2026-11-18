@@ -89,6 +89,16 @@
   }
 }
 
+/* Diagonal hatching for "off hours" in the agenda. */
+@utility hatch {
+  background-color: var(--color-canvas);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 6px,
+    rgb(32 41 35 / 0.035) 6px 7px
+  );
+}
+
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
