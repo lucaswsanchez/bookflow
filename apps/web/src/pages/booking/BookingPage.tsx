@@ -16,6 +16,7 @@ import { api, ApiError } from '../../lib/api';
 import {
   addDays,
   formatDay,
+  splitBusinessName,
   formatDuration,
   formatPrice,
   formatTime,
@@ -147,6 +148,7 @@ export default function BookingPage() {
     );
   }
   const b = business.data!;
+  const { name, place } = splitBusinessName(b.name);
 
   if (step === 4 && booking) {
     return (
@@ -159,6 +161,7 @@ export default function BookingPage() {
   return (
     <PageShell>
       <header className="pt-4 pb-8 sm:pt-8 sm:pb-10" data-testid="booking-header">
+        {place && <p className="eyebrow mb-4 text-moss">{place}</p>}
         <BusinessMark
           name={b.name}
           size="lg"
@@ -168,7 +171,7 @@ export default function BookingPage() {
           className="mt-5 font-display text-[30px] leading-[1.05] text-forest sm:text-[44px]"
           data-testid="business-name"
         >
-          {b.name}
+          {name}
         </h1>
         {b.description && (
           <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft">{b.description}</p>
@@ -418,7 +421,7 @@ function SummaryPanel({ service, staff, slot, tz }: SummaryProps) {
   ];
   return (
     <div className="rounded-lg border border-line bg-surface" data-testid="booking-summary-panel">
-      <p className="eyebrow border-b border-line px-5 py-3">Your booking</p>
+      <p className="eyebrow border-b border-line px-5 pt-2 pb-3">Your booking</p>
       <dl className="divide-y divide-line">
         {rows.map((r) => (
           <div key={r.label} className="px-5 py-3.5">
@@ -432,7 +435,11 @@ function SummaryPanel({ service, staff, slot, tz }: SummaryProps) {
       <div className="flex items-baseline justify-between border-t border-line bg-canvas/60 px-5 py-4">
         <span className="text-sm text-muted">Total</span>
         <span className="tabular text-lg font-bold">
-          {service ? formatPrice(service.price) : '—'}
+          {service ? (
+            formatPrice(service.price)
+          ) : (
+            <span className="text-sm font-normal text-faint">Choose a service</span>
+          )}
         </span>
       </div>
       <p className="px-5 py-3 text-xs text-muted">Pay at the venue. No account needed.</p>

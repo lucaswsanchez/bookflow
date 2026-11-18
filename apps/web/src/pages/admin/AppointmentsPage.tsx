@@ -265,9 +265,6 @@ export default function AppointmentsPage() {
                     {isAdmin && <Th>Professional</Th>}
                     <Th>Status</Th>
                     <Th className="text-right">Price</Th>
-                    <Th className="w-12">
-                      <span className="sr-only">Actions</span>
-                    </Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -275,7 +272,7 @@ export default function AppointmentsPage() {
                     <Fragment key={day}>
                       <tr>
                         <td
-                          colSpan={isAdmin ? 7 : 6}
+                          colSpan={isAdmin ? 6 : 5}
                           className="border-b border-line bg-canvas/70 px-4 py-2 text-[13px] font-bold text-ink"
                         >
                           {day === today ? 'Today · ' : ''}
@@ -317,25 +314,25 @@ export default function AppointmentsPage() {
                             </Td>
                           )}
                           <Td>
-                            <StatusBadge status={a.status} />
+                            <span className="flex items-center gap-1">
+                              <StatusBadge status={a.status} />
+                              {canComplete(a) && (
+                                <IconButton
+                                  label="Mark as completed"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    complete.mutate(a.id);
+                                  }}
+                                  disabled={complete.isPending}
+                                  data-testid="quick-complete"
+                                >
+                                  <Check className="size-4" aria-hidden />
+                                </IconButton>
+                              )}
+                            </span>
                           </Td>
                           <Td className="tabular text-right">{formatPrice(a.price)}</Td>
-                          <Td className="text-right">
-                            {canComplete(a) && (
-                              <IconButton
-                                label="Mark as completed"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  complete.mutate(a.id);
-                                }}
-                                disabled={complete.isPending}
-                                data-testid="quick-complete"
-                              >
-                                <Check className="size-4" aria-hidden />
-                              </IconButton>
-                            )}
-                          </Td>
                         </tr>
                       ))}
                     </Fragment>

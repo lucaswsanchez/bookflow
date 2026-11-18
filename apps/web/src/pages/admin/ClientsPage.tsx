@@ -24,6 +24,7 @@ import {
   Textarea,
   Th,
 } from '../../components/ui';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { api } from '../../lib/api';
 import { DEFAULT_TZ, formatDay, formatPrice, formatTime, toLocalDate } from '../../lib/format';
 import type { AppointmentStatus, Client } from '../../lib/types';
@@ -59,6 +60,7 @@ export default function ClientsPage() {
   const [viewing, setViewing] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState<Client | null>(null);
   const queryClient = useQueryClient();
+  const desktop = useMediaQuery('(min-width: 768px)');
 
   const clients = useQuery({
     queryKey: ['clients', deferred],
@@ -72,6 +74,38 @@ export default function ClientsPage() {
       setDeleting(null);
     },
   });
+
+  const actions = (c: Client) => {
+    const bookings = c._count?.appointments ?? 0;
+    return (
+      <div className="flex shrink-0 justify-end gap-0.5">
+        <IconButton
+          label={`Edit ${c.name}`}
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditing(c);
+          }}
+          data-testid="edit-client"
+        >
+          <Pencil className="size-4" aria-hidden />
+        </IconButton>
+        <IconButton
+          label={bookings > 0 ? 'Clients with appointments cannot be deleted' : `Delete ${c.name}`}
+          size="sm"
+          disabled={bookings > 0}
+          onClick={(e) => {
+            e.stopPropagation();
+            remove.reset();
+            setDeleting(c);
+          }}
+          data-testid="delete-client"
+        >
+          <Trash2 className="size-4" aria-hidden />
+        </IconButton>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -126,22 +160,21 @@ export default function ClientsPage() {
         />
       ) : (
         <div data-testid="clients-table">
-          <Table>
-            <thead>
-              <tr>
-                <Th>Client</Th>
-                <Th>Phone</Th>
-                <Th className="hidden sm:table-cell">Email</Th>
-                <Th className="text-right">Bookings</Th>
-                <Th className="w-24">
-                  <span className="sr-only">Actions</span>
-                </Th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.data?.map((c) => {
-                const bookings = c._count?.appointments ?? 0;
-                return (
+          {desktop ? (
+            <Table>
+              <thead>
+                <tr>
+                  <Th>Client</Th>
+                  <Th>Phone</Th>
+                  <Th>Email</Th>
+                  <Th className="text-right">Bookings</Th>
+                  <Th className="w-24">
+                    <span className="sr-only">Actions</span>
+                  </Th>
+                </tr>
+              </thead>
+              <tbody>
+                {clients.data?.map((c) => (
                   <tr
                     key={c.id}
                     data-testid="client-row"
@@ -155,45 +188,34 @@ export default function ClientsPage() {
                       </span>
                     </Td>
                     <Td className="tabular whitespace-nowrap text-ink-soft">{c.phone}</Td>
-                    <Td className="hidden text-ink-soft sm:table-cell">{c.email ?? '—'}</Td>
-                    <Td className="tabular text-right">{bookings}</Td>
-                    <Td>
-                      <div className="flex justify-end gap-0.5">
-                        <IconButton
-                          label={`Edit ${c.name}`}
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditing(c);
-                          }}
-                          data-testid="edit-client"
-                        >
-                          <Pencil className="size-4" aria-hidden />
-                        </IconButton>
-                        <IconButton
-                          label={
-                            bookings > 0
-                              ? 'Clients with appointments cannot be deleted'
-                              : `Delete ${c.name}`
-                          }
-                          size="sm"
-                          disabled={bookings > 0}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            remove.reset();
-                            setDeleting(c);
-                          }}
-                          data-testid="delete-client"
-                        >
-                          <Trash2 className="size-4" aria-hidden />
-                        </IconButton>
-                      </div>
-                    </Td>
+                    <Td className="text-ink-soft">{c.email ?? '—'}</Td>
+                    <Td className="tabular text-right">{c._count?.appointments ?? 0}</Td>
+                    <Td>{actions(c)}</Td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </Table>
+                ))}
+              </tbody>
+            </Table>
+          ) : (
+            <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
+              {clients.data?.map((c) => (
+                <li
+                  key={c.id}
+                  data-testid="client-row"
+                  onClick={() => setViewing(c)}
+                  className="flex cursor-pointer items-center gap-3 py-3 pr-2 pl-4"
+                >
+                  <Avatar name={c.name} color="#a4b99c" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{c.name}</p>
+                    <p className="tabular truncate text-[13px] text-muted">
+                      {c.phone} · {c._count?.appointments ?? 0} bookings
+                    </p>
+                  </div>
+                  {actions(c)}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
@@ -402,7 +424,7 @@ function ClientForm({ client, onDone }: { client: Client | null; onDone: () => v
           {save.error.message}
         </p>
       )}
-      <div className="-mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-canvas/60 px-5 py-3">
+      <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-[#fbfaf7] px-5 py-3">
         <Button type="button" variant="secondary" onClick={onDone}>
           Cancel
         </Button>

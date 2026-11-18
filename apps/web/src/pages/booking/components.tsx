@@ -163,7 +163,7 @@ export function DayPicker({
 }) {
   return (
     <div
-      className="-mx-4 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 sm:scroll-px-0 [scrollbar-width:none] sm:mx-0 sm:px-0"
+      className="-mx-4 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [mask-image:linear-gradient(to_right,black_calc(100%-48px),transparent)] [scrollbar-width:none] sm:mx-0 sm:scroll-px-0 sm:px-0"
       role="listbox"
       aria-label="Choose a day"
       data-testid="day-picker"

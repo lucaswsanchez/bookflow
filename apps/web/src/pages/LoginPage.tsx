@@ -150,8 +150,8 @@ export default function LoginPage() {
             double bookings
           </li>
           <li>
-            <span className="block text-xl font-bold text-white">2</span>
-            roles: admin and staff
+            <span className="block text-xl font-bold text-white">4</span>
+            steps to book
           </li>
         </ul>
       </aside>

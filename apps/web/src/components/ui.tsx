@@ -259,9 +259,13 @@ export function EmptyState({
 /* Form controls                                                                              */
 /* ------------------------------------------------------------------------------------------ */
 
-const control = (invalid?: boolean) =>
+/** Controls stretch to their container unless the caller sets its own width (e.g. `w-auto`). */
+const hasWidth = (className?: string) => /(^|\s)(w-|min-w-|max-w-)/.test(className ?? '');
+
+const control = (invalid?: boolean, className?: string) =>
   clsx(
-    'w-full rounded-md border bg-surface px-3 text-sm text-ink transition-colors placeholder:text-faint focus:outline-none focus:ring-3 disabled:bg-subtle disabled:text-muted',
+    !hasWidth(className) && 'w-full',
+    'rounded-md border bg-surface px-3 text-sm text-ink transition-colors placeholder:text-faint focus:outline-none focus:ring-3 disabled:bg-subtle disabled:text-muted',
     invalid
       ? 'border-danger focus:ring-danger-100'
       : 'border-line-strong hover:border-faint focus:border-forest focus:ring-forest-100',
@@ -275,7 +279,7 @@ export const Input = forwardRef<
     <input
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={clsx(control(invalid), 'h-10', className)}
+      className={clsx(control(invalid, className), 'h-10', className)}
       {...props}
     />
   );
@@ -289,7 +293,7 @@ export const Textarea = forwardRef<
     <textarea
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={clsx(control(invalid), 'py-2', className)}
+      className={clsx(control(invalid, className), 'py-2', className)}
       {...props}
     />
   );
@@ -304,7 +308,7 @@ export const Select = forwardRef<
       ref={ref}
       aria-invalid={invalid || undefined}
       className={clsx(
-        control(invalid),
+        control(invalid, className),
         'h-10 appearance-none bg-[url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2016%2016%27%20fill=%27none%27%20stroke=%27%23758078%27%20stroke-width=%271.6%27%3E%3Cpath%20d=%27m4%206%204%204%204-4%27/%3E%3C/svg%3E")] bg-[length:16px] bg-[right_10px_center] bg-no-repeat pr-9',
         className,
       )}
@@ -450,10 +454,12 @@ export function Avatar({
   name,
   color,
   size = 'md',
+  className,
 }: {
   name: string;
   color?: string;
   size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }) {
   const initials = name
     .split(/\s+/)
@@ -469,6 +475,7 @@ export function Avatar({
         size === 'sm' && 'size-6 text-[10px]',
         size === 'md' && 'size-8 text-xs',
         size === 'lg' && 'size-11 text-sm',
+        className,
       )}
       style={{ backgroundColor: color ?? '#54856b' }}
     >
@@ -477,11 +484,38 @@ export function Avatar({
   );
 }
 
+/** Overlapping avatars with a white ring so initials stay readable. */
+export function AvatarStack({ people }: { people: { id: string; name: string; color: string }[] }) {
+  return (
+    <span className="flex items-center">
+      {people.map((p, i) => (
+        <span key={p.id} title={p.name} className={i === 0 ? '' : '-ml-1'}>
+          <Avatar name={p.name} color={p.color} size="sm" className="ring-2 ring-surface" />
+        </span>
+      ))}
+    </span>
+  );
+}
+
 /** Bordered table on a white surface. Scrolls horizontally on small screens. */
-export function Table({ children, className }: { children: ReactNode; className?: string }) {
+export function Table({
+  children,
+  className,
+  fit,
+}: {
+  children: ReactNode;
+  className?: string;
+  /** Fit the container instead of scrolling (narrow tables with few columns). */
+  fit?: boolean;
+}) {
   return (
     <div className={clsx('overflow-x-auto rounded-lg border border-line bg-surface', className)}>
-      <table className="w-full min-w-[640px] border-collapse text-sm [&_tbody_tr:last-child>td]:border-b-0">
+      <table
+        className={clsx(
+          'w-full border-collapse text-sm [&_tbody_tr:last-child>td]:border-b-0',
+          !fit && 'min-w-[640px]',
+        )}
+      >
         {children}
       </table>
     </div>
@@ -512,6 +546,18 @@ export function Td({ children, className }: { children?: ReactNode; className?: 
 /* Brand                                                                                      */
 /* ------------------------------------------------------------------------------------------ */
 
+/** The BookFlow mark: three booking slots. On dark surfaces the tile turns light. */
+export function LogoMark({ inverted, className }: { inverted?: boolean; className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden className={clsx('size-7 shrink-0', className)}>
+      <rect width="64" height="64" rx="12" fill={inverted ? '#f7f6f2' : '#173d32'} />
+      <rect x="14" y="15" width="22" height="9" rx="2" fill={inverted ? '#54856b' : '#a4b99c'} />
+      <rect x="14" y="28" width="36" height="9" rx="2" fill="#d8bfa5" />
+      <rect x="28" y="41" width="22" height="9" rx="2" fill={inverted ? '#173d32' : '#f7f6f2'} />
+    </svg>
+  );
+}
+
 export function Logo({ className, inverted }: { className?: string; inverted?: boolean }) {
   return (
     <span
@@ -521,7 +567,7 @@ export function Logo({ className, inverted }: { className?: string; inverted?: b
         className,
       )}
     >
-      <img src="/favicon.svg" alt="" className="size-7" />
+      <LogoMark inverted={inverted} />
       BookFlow
     </span>
   );

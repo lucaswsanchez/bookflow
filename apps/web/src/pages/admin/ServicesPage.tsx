@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import {
-  Avatar,
+  AvatarStack,
   Badge,
   Button,
   Checkbox,
@@ -23,6 +23,7 @@ import {
   Textarea,
   Th,
 } from '../../components/ui';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { api } from '../../lib/api';
 import { formatDuration, formatPrice, slugify } from '../../lib/format';
 import type { Service, StaffMember } from '../../lib/types';
@@ -57,6 +58,31 @@ export default function ServicesPage() {
   const offeredBy = (serviceId: string) =>
     staff.data?.filter((s) => s.services?.some((sv) => sv.id === serviceId)) ?? [];
   const activeCount = services.data?.filter((s) => s.active).length ?? 0;
+  const desktop = useMediaQuery('(min-width: 768px)');
+
+  const actions = (s: Service) => (
+    <div className="flex justify-end gap-0.5">
+      <IconButton
+        label={`Edit ${s.name}`}
+        size="sm"
+        onClick={() => setEditing(s)}
+        data-testid="edit-service"
+      >
+        <Pencil className="size-4" aria-hidden />
+      </IconButton>
+      <IconButton
+        label={`Delete ${s.name}`}
+        size="sm"
+        onClick={() => {
+          remove.reset();
+          setDeleting(s);
+        }}
+        data-testid="delete-service"
+      >
+        <Trash2 className="size-4" aria-hidden />
+      </IconButton>
+    </div>
+  );
 
   return (
     <>
@@ -95,93 +121,100 @@ export default function ServicesPage() {
             <span className="font-bold text-ink">{activeCount}</span> of {services.data?.length}{' '}
             services bookable online
           </p>
-          <div data-testid="services-table">
-            <Table>
-              <thead>
-                <tr>
-                  <Th>Service</Th>
-                  <Th>Duration</Th>
-                  <Th className="text-right">Price</Th>
-                  <Th>Offered by</Th>
-                  <Th>Availability</Th>
-                  <Th className="w-24">
-                    <span className="sr-only">Actions</span>
-                  </Th>
-                </tr>
-              </thead>
-              <tbody>
-                {services.data?.map((s) => {
-                  const people = offeredBy(s.id);
-                  return (
-                    <tr
-                      key={s.id}
-                      data-testid={`service-row-${slugify(s.name)}`}
-                      className={s.active ? undefined : 'text-muted'}
-                    >
-                      <Td className="max-w-sm">
-                        <p className="font-semibold text-ink">{s.name}</p>
-                        {s.description && (
-                          <p className="mt-0.5 line-clamp-2 text-[13px] text-muted">
-                            {s.description}
-                          </p>
-                        )}
-                      </Td>
-                      <Td className="whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 text-ink-soft">
-                          <Clock className="size-3.5 text-faint" aria-hidden />
-                          {formatDuration(s.durationMinutes)}
-                        </span>
-                      </Td>
-                      <Td className="tabular text-right font-semibold whitespace-nowrap text-ink">
-                        {formatPrice(s.price)}
-                      </Td>
-                      <Td>
-                        {people.length === 0 ? (
-                          <span className="text-[13px] text-faint">Nobody yet</span>
-                        ) : (
-                          <span className="flex items-center">
-                            {people.map((p) => (
-                              <span key={p.id} className="-ml-1.5 first:ml-0" title={p.name}>
-                                <span className="block rounded-full ring-2 ring-surface">
-                                  <Avatar name={p.name} color={p.color} size="sm" />
-                                </span>
-                              </span>
-                            ))}
+          {desktop ? (
+            <div data-testid="services-table">
+              <Table>
+                <thead>
+                  <tr>
+                    <Th>Service</Th>
+                    <Th>Duration</Th>
+                    <Th className="text-right">Price</Th>
+                    <Th>Offered by</Th>
+                    <Th>Availability</Th>
+                    <Th className="w-24">
+                      <span className="sr-only">Actions</span>
+                    </Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {services.data?.map((s) => {
+                    const people = offeredBy(s.id);
+                    return (
+                      <tr
+                        key={s.id}
+                        data-testid={`service-row-${slugify(s.name)}`}
+                        className={s.active ? undefined : 'text-muted'}
+                      >
+                        <Td className="max-w-sm">
+                          <p className="font-semibold text-ink">{s.name}</p>
+                          {s.description && (
+                            <p className="mt-0.5 line-clamp-2 text-[13px] text-muted">
+                              {s.description}
+                            </p>
+                          )}
+                        </Td>
+                        <Td className="whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 text-ink-soft">
+                            <Clock className="size-3.5 text-faint" aria-hidden />
+                            {formatDuration(s.durationMinutes)}
                           </span>
+                        </Td>
+                        <Td className="tabular text-right font-semibold whitespace-nowrap text-ink">
+                          {formatPrice(s.price)}
+                        </Td>
+                        <Td>
+                          {people.length === 0 ? (
+                            <span className="text-[13px] text-faint">Nobody yet</span>
+                          ) : (
+                            <AvatarStack people={people} />
+                          )}
+                        </Td>
+                        <Td>
+                          {s.active ? <Badge tone="forest">Bookable</Badge> : <Badge>Hidden</Badge>}
+                        </Td>
+                        <Td>{actions(s)}</Td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Table>
+            </div>
+          ) : (
+            <ul
+              className="divide-y divide-line rounded-lg border border-line bg-surface"
+              data-testid="services-table"
+            >
+              {services.data?.map((s) => {
+                const people = offeredBy(s.id);
+                return (
+                  <li
+                    key={s.id}
+                    data-testid={`service-row-${slugify(s.name)}`}
+                    className={s.active ? 'p-4' : 'p-4 opacity-70'}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold">{s.name}</p>
+                        {s.description && (
+                          <p className="mt-0.5 text-[13px] text-muted">{s.description}</p>
                         )}
-                      </Td>
-                      <Td>
-                        {s.active ? <Badge tone="forest">Bookable</Badge> : <Badge>Hidden</Badge>}
-                      </Td>
-                      <Td>
-                        <div className="flex justify-end gap-0.5">
-                          <IconButton
-                            label={`Edit ${s.name}`}
-                            size="sm"
-                            onClick={() => setEditing(s)}
-                            data-testid="edit-service"
-                          >
-                            <Pencil className="size-4" aria-hidden />
-                          </IconButton>
-                          <IconButton
-                            label={`Delete ${s.name}`}
-                            size="sm"
-                            onClick={() => {
-                              remove.reset();
-                              setDeleting(s);
-                            }}
-                            data-testid="delete-service"
-                          >
-                            <Trash2 className="size-4" aria-hidden />
-                          </IconButton>
-                        </div>
-                      </Td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>
-          </div>
+                      </div>
+                      <p className="tabular shrink-0 font-bold">{formatPrice(s.price)}</p>
+                    </div>
+                    <div className="mt-3 flex items-center gap-3 text-[13px] text-ink-soft">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="size-3.5 text-faint" aria-hidden />
+                        {formatDuration(s.durationMinutes)}
+                      </span>
+                      {people.length > 0 && <AvatarStack people={people} />}
+                      {s.active ? <Badge tone="forest">Bookable</Badge> : <Badge>Hidden</Badge>}
+                      <span className="ml-auto">{actions(s)}</span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </>
       )}
 
@@ -302,7 +335,7 @@ function ServiceForm({ service, onDone }: { service: Service | null; onDone: () 
           {save.error.message}
         </p>
       )}
-      <div className="-mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-canvas/60 px-5 py-3">
+      <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-[#fbfaf7] px-5 py-3">
         <Button type="button" variant="secondary" onClick={onDone}>
           Cancel
         </Button>
