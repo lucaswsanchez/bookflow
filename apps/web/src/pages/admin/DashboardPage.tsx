@@ -112,7 +112,7 @@ export default function DashboardPage() {
                 </Kpi>
                 <Kpi>
                   <Stat
-                    label="Appointments today"
+                    label="Booked today"
                     value={summary.data.today.appointments}
                     hint={`${summary.data.today.byStatus.COMPLETED ?? 0} completed · ${
                       summary.data.today.byStatus.CONFIRMED ?? 0
@@ -133,7 +133,7 @@ export default function DashboardPage() {
                 </Kpi>
                 <Kpi>
                   <Stat
-                    label="Appointments this week"
+                    label="Booked this week"
                     value={summary.data.week.appointments}
                     hint={insights ? `${formatPercent(insights.total)} occupancy` : 'Calculating…'}
                     testId="stat-week-appointments"

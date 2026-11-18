@@ -375,7 +375,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
                       value={r.start}
                       step={900}
                       onChange={(e) => update(i, { start: e.target.value })}
-                      className="tabular rounded-sm bg-transparent text-[13px] focus:outline-none"
+                      className="tabular no-picker-icon w-[46px] rounded-sm bg-transparent text-[13px] focus:outline-none"
                     />
                     <span className="text-faint">–</span>
                     <input
@@ -384,7 +384,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
                       value={r.end}
                       step={900}
                       onChange={(e) => update(i, { end: e.target.value })}
-                      className="tabular rounded-sm bg-transparent text-[13px] focus:outline-none"
+                      className="tabular no-picker-icon w-[46px] rounded-sm bg-transparent text-[13px] focus:outline-none"
                     />
                     <IconButton
                       label="Remove range"
@@ -427,7 +427,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
           {error}
         </p>
       )}
-      <div className="-mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-canvas/60 px-5 py-3">
+      <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-[#fbfaf7] px-5 py-3">
         <Button type="button" variant="secondary" onClick={onDone}>
           Cancel
         </Button>

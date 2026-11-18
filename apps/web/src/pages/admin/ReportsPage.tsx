@@ -248,8 +248,12 @@ export default function ReportsPage() {
           </Section>
 
           <div className="grid gap-12 lg:grid-cols-2">
-            <Section title="Most booked services" testId="report-services">
-              <Table className="mt-1">
+            <Section
+              title="Most booked services"
+              description="Ranked by appointments, cancelled excluded"
+              testId="report-services"
+            >
+              <Table fit>
                 <thead>
                   <tr>
                     <Th>Service</Th>

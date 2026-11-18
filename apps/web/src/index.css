@@ -95,8 +95,15 @@
   background-image: repeating-linear-gradient(
     135deg,
     transparent 0 6px,
-    rgb(32 41 35 / 0.035) 6px 7px
+    rgb(32 41 35 / 0.06) 6px 7px
   );
+}
+
+/* Hide the browser's clock/calendar icon in compact time inputs. */
+@utility no-picker-icon {
+  &::-webkit-calendar-picker-indicator {
+    display: none;
+  }
 }
 
 @utility tabular {

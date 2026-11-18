@@ -94,6 +94,29 @@ export default function HomePage() {
               <code className="font-mono">Staff123!</code>
             </dd>
           </dl>
+
+          {/* Real screenshot of the admin overview with demo data */}
+          <figure className="mt-16 overflow-hidden rounded-xl border border-line bg-surface shadow-pop sm:mt-20">
+            <div
+              className="flex items-center gap-1.5 border-b border-line bg-subtle px-4 py-2.5"
+              aria-hidden
+            >
+              <span className="size-2.5 rounded-full bg-line-strong" />
+              <span className="size-2.5 rounded-full bg-line-strong" />
+              <span className="size-2.5 rounded-full bg-line-strong" />
+              <span className="ml-3 truncate rounded-sm bg-surface px-2 py-0.5 text-[11px] text-muted">
+                bookflow / overview
+              </span>
+            </div>
+            <img
+              src="/preview-overview.jpg"
+              alt="BookFlow admin overview: revenue, next appointments, status and occupancy per professional"
+              width={2160}
+              height={1350}
+              loading="lazy"
+              className="block h-auto w-full"
+            />
+          </figure>
         </section>
 
         <section className="border-y border-line bg-surface" aria-label="Made for">

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { AppointmentDetail } from '../../components/AppointmentDetail';
 import {
   Avatar,
@@ -24,6 +25,7 @@ import {
   formatTime,
   minutesOfDay,
   minutesToTime,
+  slugify,
   startOfWeek,
   toLocalDate,
 } from '../../lib/format';
@@ -130,6 +132,18 @@ export default function AgendaPage() {
     });
   }, [view, people, visible, date, days, tz, today]);
 
+  // On phones the day view shows one professional at a time instead of cramped columns.
+  const desktop = useMediaQuery('(min-width: 768px)');
+  const [phoneStaff, setPhoneStaff] = useState<string | null>(null);
+  const phoneColumns =
+    !desktop && view === 'day' && columns.length > 1
+      ? [
+          columns.find((c) => c.key === phoneStaff) ??
+            [...columns].sort((x, y) => countActive(y.items) - countActive(x.items))[0] ??
+            columns[0],
+        ]
+      : null;
+
   const [dayStart, dayEnd] = useMemo(() => hourRange(people, visible, tz), [people, visible, tz]);
 
   const move = (dir: -1 | 1) => setDate(addDays(date, dir * (view === 'day' ? 1 : 7)));
@@ -163,8 +177,8 @@ export default function AgendaPage() {
       />
 
       {/* Toolbar */}
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
           <Button
             variant="secondary"
             size="sm"
@@ -173,7 +187,7 @@ export default function AgendaPage() {
           >
             Today
           </Button>
-          <div className="flex items-center">
+          <div className="flex shrink-0 items-center">
             <IconButton
               label="Previous"
               size="sm"
@@ -186,12 +200,17 @@ export default function AgendaPage() {
               <ChevronRight className="size-4" aria-hidden />
             </IconButton>
           </div>
-          <h2 className="text-lg font-bold tracking-tight" data-testid="agenda-range">
+          <h2
+            className="truncate text-base font-bold tracking-tight sm:text-lg"
+            data-testid="agenda-range"
+          >
             {view === 'day'
-              ? formatDay(date, { weekday: 'long', month: 'long' })
+              ? formatDay(date, desktop ? { weekday: 'long', month: 'long' } : {})
               : `${formatDay(from, { weekday: undefined })} – ${formatDay(to, { weekday: undefined })}`}
           </h2>
-          <label className="relative ml-1">
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="shrink-0">
             <span className="sr-only">Go to date</span>
             <input
               type="date"
@@ -201,17 +220,15 @@ export default function AgendaPage() {
               className="h-8 rounded-md border border-line-strong bg-surface px-2 text-[13px] text-ink-soft hover:border-faint focus:border-forest focus:ring-3 focus:ring-forest-100 focus:outline-none"
             />
           </label>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
           {isAdmin && (
             <Select
               aria-label="Filter by professional"
               value={staffId}
               onChange={(e) => setStaffId(e.target.value)}
               data-testid="agenda-staff-filter"
-              className="h-8! w-auto min-w-44 text-[13px]"
+              className="h-8! min-w-0 flex-1 text-[13px] xl:w-48 xl:flex-none"
             >
-              <option value="">All professionals</option>
+              <option value="">All staff</option>
               {staff.data?.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -219,15 +236,17 @@ export default function AgendaPage() {
               ))}
             </Select>
           )}
-          <Segmented
-            label="View"
-            value={view}
-            onChange={setView}
-            options={[
-              { value: 'day', label: 'Day', testId: 'agenda-view-day' },
-              { value: 'week', label: 'Week', testId: 'agenda-view-week' },
-            ]}
-          />
+          <div className="ml-auto shrink-0">
+            <Segmented
+              label="View"
+              value={view}
+              onChange={setView}
+              options={[
+                { value: 'day', label: 'Day', testId: 'agenda-view-day' },
+                { value: 'week', label: 'Week', testId: 'agenda-view-week' },
+              ]}
+            />
+          </div>
         </div>
       </div>
 
@@ -254,7 +273,7 @@ export default function AgendaPage() {
             </li>
           ))}
           <li className="flex items-center gap-1.5">
-            <span className="hatch size-2.5 rounded-sm border border-line" aria-hidden />
+            <span className="hatch size-2.5 rounded-sm border border-line-strong" aria-hidden />
             Off hours
           </li>
         </ul>
@@ -265,16 +284,53 @@ export default function AgendaPage() {
       ) : appointments.isLoading || staff.isLoading ? (
         <Skeleton className="h-[560px] w-full" />
       ) : (
-        <TimeGrid
-          columns={columns}
-          tz={tz}
-          today={today}
-          dayStart={dayStart}
-          dayEnd={dayEnd}
-          showStaff={people.length > 1 && (view === 'week' || columns.length === 1)}
-          testId={view === 'day' ? 'agenda-day' : 'agenda-week'}
-          onSelect={setSelected}
-        />
+        <>
+          {phoneColumns && (
+            <div
+              className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]"
+              role="tablist"
+              aria-label="Professional"
+            >
+              {columns.map((c) => {
+                const member = people.find((p) => p.id === c.key);
+                const selectedTab = c.key === phoneColumns[0].key;
+                return (
+                  <button
+                    key={c.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={selectedTab}
+                    onClick={() => setPhoneStaff(c.key)}
+                    data-testid={`agenda-staff-tab-${slugify(member?.name ?? c.key)}`}
+                    className={clsx(
+                      'flex shrink-0 items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-[13px] font-semibold transition-colors',
+                      selectedTab
+                        ? 'border-forest bg-forest text-white'
+                        : 'border-line-strong bg-surface text-ink-soft',
+                    )}
+                  >
+                    {member && <Avatar name={member.name} color={member.color} size="sm" />}
+                    {member?.name.split(' ')[0]}
+                    <span className={selectedTab ? 'text-sage' : 'text-faint'}>
+                      {countActive(c.items)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <TimeGrid
+            columns={phoneColumns ?? columns}
+            tz={tz}
+            today={today}
+            dayStart={dayStart}
+            dayEnd={dayEnd}
+            showStaff={people.length > 1 && (view === 'week' || columns.length === 1)}
+            dense={view === 'week'}
+            testId={view === 'day' ? 'agenda-day' : 'agenda-week'}
+            onSelect={setSelected}
+          />
+        </>
       )}
 
       <AppointmentDetail appointment={selected} timeZone={tz} onClose={() => setSelected(null)} />
@@ -314,6 +370,7 @@ function TimeGrid({
   dayStart,
   dayEnd,
   showStaff,
+  dense,
   testId,
   onSelect,
 }: {
@@ -323,6 +380,7 @@ function TimeGrid({
   dayStart: number;
   dayEnd: number;
   showStaff: boolean;
+  dense?: boolean;
   testId: string;
   onSelect: (a: Appointment) => void;
 }) {
@@ -415,6 +473,7 @@ function TimeGrid({
                     top={y(p.start)}
                     height={(p.end - p.start) * PX_PER_MIN}
                     showStaff={showStaff}
+                    dense={dense}
                     onClick={() => onSelect(p.item)}
                   />
                 ))}
@@ -445,6 +504,7 @@ function Block({
   top,
   height,
   showStaff,
+  dense,
   onClick,
 }: {
   p: Positioned<Appointment>;
@@ -452,12 +512,21 @@ function Block({
   top: number;
   height: number;
   showStaff: boolean;
+  dense?: boolean;
   onClick: () => void;
 }) {
   const a = p.item;
   const short = height < 40;
-  const narrow = p.lanes > 1;
   const width = 100 / p.lanes;
+  // Side-by-side blocks in the week view are too narrow for names: show time + staff dot.
+  const compact = dense && p.lanes > 1;
+  const dot = showStaff && (
+    <span
+      className="size-1.5 shrink-0 rounded-full"
+      style={{ backgroundColor: a.staff.color }}
+      aria-hidden
+    />
+  );
   return (
     <button
       type="button"
@@ -466,9 +535,10 @@ function Block({
       data-status={a.status}
       title={`${formatTime(a.startsAt, tz)} ${a.client.name} · ${a.service.name} · ${a.staff.name} (${STATUS_LABELS[a.status]})`}
       className={clsx(
-        'absolute overflow-hidden rounded-[5px] border-l-[3px] px-2 text-left text-[12px] leading-tight transition-[filter,box-shadow] hover:z-10 hover:shadow-pop hover:brightness-[0.98] focus-visible:z-10',
+        'absolute overflow-hidden rounded-[5px] border-l-[3px] text-left text-[12px] leading-tight transition-[filter,box-shadow] hover:z-10 hover:shadow-pop hover:brightness-[0.98] focus-visible:z-10',
         STATUS_TONES[a.status].block,
-        short ? 'flex items-center gap-1.5 py-0' : 'py-1.5',
+        compact ? 'px-1.5 py-1' : 'px-2',
+        !compact && (short ? 'flex items-center gap-1.5 py-0' : 'py-1.5'),
       )}
       style={{
         top: top + 1,
@@ -477,21 +547,23 @@ function Block({
         width: `calc(${width}% - 6px)`,
       }}
     >
-      <span className="tabular shrink-0 font-bold">{formatTime(a.startsAt, tz)}</span>
-      <span className={clsx('truncate font-semibold', !short && 'block')}>
-        {narrow ? a.client.name.split(' ')[0] : a.client.name}
-      </span>
-      {!short && (
-        <span className="mt-0.5 flex items-center gap-1 truncate font-normal opacity-80">
-          {showStaff && (
-            <span
-              className="size-1.5 shrink-0 rounded-full"
-              style={{ backgroundColor: a.staff.color }}
-              aria-hidden
-            />
-          )}
-          <span className="truncate">{a.service.name}</span>
+      {compact ? (
+        <span className="flex items-center gap-1">
+          {dot}
+          <span className="tabular font-bold">{formatTime(a.startsAt, tz)}</span>
+          <span className="sr-only">{a.client.name}</span>
         </span>
+      ) : (
+        <>
+          <span className="tabular shrink-0 font-bold">{formatTime(a.startsAt, tz)}</span>
+          <span className={clsx('truncate font-semibold', !short && 'block')}>{a.client.name}</span>
+          {!short && (
+            <span className="mt-0.5 flex items-center gap-1 truncate font-normal opacity-80">
+              {dot}
+              <span className="truncate">{a.service.name}</span>
+            </span>
+          )}
+        </>
       )}
       <span className="sr-only">({STATUS_LABELS[a.status]})</span>
     </button>

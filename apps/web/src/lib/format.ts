@@ -91,3 +91,9 @@ export const WEEKDAYS = [
   'Friday',
   'Saturday',
 ];
+
+/** "Barbería Costanera — Corrientes" → { name: "Barbería Costanera", place: "Corrientes" } */
+export function splitBusinessName(full = '') {
+  const [name, place] = full.split(/\s+[—–-]\s+/);
+  return { name, place: place ?? null };
+}

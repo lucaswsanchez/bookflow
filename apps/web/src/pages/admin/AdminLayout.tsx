@@ -15,6 +15,7 @@ import {
 import { Suspense, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
+import { splitBusinessName } from '../../lib/format';
 import { Avatar, BusinessMark, IconButton, Logo, Spinner } from '../../components/ui';
 
 interface NavItem {
@@ -210,12 +211,10 @@ export default function AdminLayout() {
   );
 }
 
-/** "Barbería Costanera — Corrientes" → "Barbería Costanera" */
 function shortName(name = '') {
-  return name.split(/\s+[—–-]\s+/)[0];
+  return splitBusinessName(name).name;
 }
 
-/** "Barbería Costanera — Corrientes" → "Corrientes" */
 function locationOf(name = '') {
-  return name.split(/\s+[—–-]\s+/)[1] ?? 'Business workspace';
+  return splitBusinessName(name).place ?? 'Business workspace';
 }
