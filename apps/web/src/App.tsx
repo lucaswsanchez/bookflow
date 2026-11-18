@@ -4,21 +4,22 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import { RequireAuth } from './auth/RequireAuth';
 import { ApiError } from './lib/api';
-import AdminLayout from './pages/admin/AdminLayout';
-import AgendaPage from './pages/admin/AgendaPage';
-import AppointmentsPage from './pages/admin/AppointmentsPage';
-import ClientsPage from './pages/admin/ClientsPage';
-import DashboardPage from './pages/admin/DashboardPage';
-import ServicesPage from './pages/admin/ServicesPage';
-import StaffPage from './pages/admin/StaffPage';
-import UiShowcasePage from './pages/admin/UiShowcasePage';
 import BookingPage from './pages/booking/BookingPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import { Spinner } from './components/ui';
 
-// Charts are only needed on the reports page: keep Recharts out of the main bundle.
+// The admin panel is loaded on demand so the public booking page stays light on phones.
+// Reports also get their own chunk because of Recharts.
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'));
+const AgendaPage = lazy(() => import('./pages/admin/AgendaPage'));
+const AppointmentsPage = lazy(() => import('./pages/admin/AppointmentsPage'));
 const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'));
+const ServicesPage = lazy(() => import('./pages/admin/ServicesPage'));
+const StaffPage = lazy(() => import('./pages/admin/StaffPage'));
+const ClientsPage = lazy(() => import('./pages/admin/ClientsPage'));
+const UiShowcasePage = lazy(() => import('./pages/admin/UiShowcasePage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,7 +64,15 @@ export default function App() {
               path="/app"
               element={
                 <RequireAuth>
-                  <AdminLayout />
+                  <Suspense
+                    fallback={
+                      <div className="grid min-h-screen place-items-center">
+                        <Spinner />
+                      </div>
+                    }
+                  >
+                    <AdminLayout />
+                  </Suspense>
                 </RequireAuth>
               }
             >
@@ -74,9 +83,7 @@ export default function App() {
                 path="reports"
                 element={
                   <RequireAuth roles={['ADMIN']}>
-                    <Suspense fallback={<Spinner label="Loading reports…" />}>
-                      <ReportsPage />
-                    </Suspense>
+                    <ReportsPage />
                   </RequireAuth>
                 }
               />

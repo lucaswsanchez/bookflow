@@ -12,10 +12,10 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
-import { Avatar, BusinessMark, IconButton, Logo } from '../../components/ui';
+import { Avatar, BusinessMark, IconButton, Logo, Spinner } from '../../components/ui';
 
 interface NavItem {
   to: string;
@@ -201,7 +201,9 @@ export default function AdminLayout() {
 
       <div className="min-w-0">
         <main className="mx-auto max-w-[1240px] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
-          <Outlet />
+          <Suspense fallback={<Spinner />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
