@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '../auth/useAuth';
-import { Button, Card, Field, Input, Logo } from '../components/ui';
+import { Button, Field, Input, Logo } from '../components/ui';
 import { ApiError } from '../lib/api';
 
 const schema = z.object({
@@ -51,7 +51,7 @@ export function LoginForm({ onSubmit }: { onSubmit: (values: LoginValues) => Pro
   };
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-4" data-testid="login-form">
+    <form onSubmit={submit} noValidate className="space-y-5" data-testid="login-form">
       <Field label="Email" htmlFor="email" error={errors.email?.message}>
         <Input
           id="email"
@@ -75,36 +75,42 @@ export function LoginForm({ onSubmit }: { onSubmit: (values: LoginValues) => Pro
       {error && (
         <p
           role="alert"
-          className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger"
+          className="rounded-md bg-danger-50 px-3 py-2.5 text-sm font-medium text-danger"
           data-testid="login-error"
         >
           {error}
         </p>
       )}
-      <Button type="submit" className="w-full" loading={isSubmitting} data-testid="login-submit">
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        loading={isSubmitting}
+        data-testid="login-submit"
+      >
         Log in
       </Button>
-      <div className="rounded-lg bg-canvas p-3 text-sm text-ink-soft">
-        <p className="mb-2 font-medium text-ink-soft">Try a demo account</p>
-        <div className="flex gap-2">
-          <Button
+      <div className="border-t border-line pt-5">
+        <p className="eyebrow mb-3">Try a demo account</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
             type="button"
-            variant="secondary"
-            size="sm"
             onClick={() => fill(DEMO.admin)}
             data-testid="fill-demo-admin"
+            className="rounded-md border border-line-strong px-3 py-2.5 text-left transition-colors hover:border-forest hover:bg-forest-50"
           >
-            Admin
-          </Button>
-          <Button
+            <span className="block text-[13px] font-bold">Admin</span>
+            <span className="block truncate text-xs text-muted">Full access</span>
+          </button>
+          <button
             type="button"
-            variant="secondary"
-            size="sm"
             onClick={() => fill(DEMO.staff)}
             data-testid="fill-demo-staff"
+            className="rounded-md border border-line-strong px-3 py-2.5 text-left transition-colors hover:border-forest hover:bg-forest-50"
           >
-            Staff
-          </Button>
+            <span className="block text-[13px] font-bold">Staff</span>
+            <span className="block truncate text-xs text-muted">Own agenda only</span>
+          </button>
         </div>
       </div>
     </form>
@@ -120,27 +126,54 @@ export default function LoginPage() {
   if (status === 'authenticated') return <Navigate to={from} replace />;
 
   return (
-    <div className="grid min-h-screen place-items-center bg-gradient-to-b from-forest-50 to-canvas px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <Link to="/" aria-label="BookFlow home">
-            <Logo className="text-xl" />
-          </Link>
-          <h1 className="mt-4 text-2xl font-bold text-ink">Welcome back</h1>
-          <p className="text-sm text-muted">Log in to manage your agenda.</p>
+    <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-forest p-12 text-white lg:flex">
+        <Link to="/" aria-label="BookFlow home">
+          <Logo inverted />
+        </Link>
+        <div className="max-w-md">
+          <p className="font-display text-[44px] leading-[1.05] text-sand-50">
+            Your whole day, in one calm agenda.
+          </p>
+          <p className="mt-5 text-[15px] leading-relaxed text-sage">
+            Clients book online, the schedule fills itself, and every professional sees exactly what
+            is next.
+          </p>
         </div>
-        <Card className="p-6">
+        <ul className="grid grid-cols-3 gap-6 border-t border-white/10 pt-6 text-[13px] text-sage">
+          <li>
+            <span className="block text-xl font-bold text-white">24/7</span>
+            online booking
+          </li>
+          <li>
+            <span className="block text-xl font-bold text-white">0</span>
+            double bookings
+          </li>
+          <li>
+            <span className="block text-xl font-bold text-white">2</span>
+            roles: admin and staff
+          </li>
+        </ul>
+      </aside>
+
+      <main className="flex items-center justify-center px-4 py-12 sm:px-8">
+        <div className="w-full max-w-sm">
+          <Link to="/" aria-label="BookFlow home" className="lg:hidden">
+            <Logo />
+          </Link>
+          <h1 className="mt-8 text-[28px] font-bold tracking-tight lg:mt-0">Welcome back</h1>
+          <p className="mt-1 mb-8 text-sm text-muted">Log in to manage your agenda.</p>
           <LoginForm
             onSubmit={async ({ email, password }) => {
               await login(email, password);
               navigate(from, { replace: true });
             }}
           />
-        </Card>
-        <p className="text-center text-xs text-muted">
-          First request may take ~50s while the free-tier server wakes up.
-        </p>
-      </div>
+          <p className="mt-8 text-xs leading-relaxed text-muted">
+            The demo API runs on a free tier: the first request may take ~50s while it wakes up.
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

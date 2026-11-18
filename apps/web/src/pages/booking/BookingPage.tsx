@@ -1,8 +1,17 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, CalendarCheck, Clock, MapPin, User } from 'lucide-react';
+import { ArrowLeft, CalendarPlus, Check, Clock, MapPin, Phone } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Button, Card, ErrorState, Logo, Spinner } from '../../components/ui';
+import {
+  Avatar,
+  BusinessMark,
+  Button,
+  ErrorState,
+  IconButton,
+  Logo,
+  Skeleton,
+  Spinner,
+} from '../../components/ui';
 import { api, ApiError } from '../../lib/api';
 import {
   addDays,
@@ -12,6 +21,7 @@ import {
   formatTime,
   toLocalDate,
 } from '../../lib/format';
+import { downloadIcs } from '../../lib/ics';
 import type {
   Availability,
   BookingSummary,
@@ -60,6 +70,7 @@ export default function BookingPage() {
     queryFn: () => api<StaffMember[]>(`${base}/staff`, { query: { serviceId: service!.id } }),
     enabled: !!service,
   });
+  // Availability always comes from the API: the client never computes free slots.
   const availability = useQuery({
     queryKey: ['availability', slug, service?.id, staff?.id, date],
     queryFn: () =>
@@ -84,11 +95,20 @@ export default function BookingPage() {
     onSuccess: (data) => {
       setBooking(data);
       setStep(4);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     onError: (e) => {
       if (e instanceof ApiError && e.status === 409) void availability.refetch();
     },
   });
+
+  const goTo = (next: number) => {
+    setStep(next);
+    // Keep the flow in view on phones without jumping back to the business header.
+    const steps = document.getElementById('booking-steps');
+    if (steps && steps.getBoundingClientRect().top < 0)
+      steps.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const restart = () => {
     setStep(0);
@@ -102,52 +122,82 @@ export default function BookingPage() {
   if (business.isLoading)
     return (
       <PageShell>
-        <Spinner />
+        <div className="space-y-4 py-8">
+          <Skeleton className="size-14" />
+          <Skeleton className="h-9 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="mt-8 h-64 w-full" />
+        </div>
       </PageShell>
     );
   if (business.isError) {
     return (
       <PageShell>
-        <ErrorState
-          message={
-            business.error instanceof ApiError && business.error.status === 404
-              ? 'This business does not exist.'
-              : business.error.message
-          }
-          onRetry={() => business.refetch()}
-        />
+        <div className="py-10">
+          <ErrorState
+            message={
+              business.error instanceof ApiError && business.error.status === 404
+                ? 'This business does not exist.'
+                : business.error.message
+            }
+            onRetry={() => business.refetch()}
+          />
+        </div>
       </PageShell>
     );
   }
   const b = business.data!;
 
+  if (step === 4 && booking) {
+    return (
+      <PageShell>
+        <Confirmation booking={booking} onRestart={restart} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell>
-      <header className="mb-6 space-y-1" data-testid="booking-header">
-        <p className="text-sm font-medium text-forest">Book an appointment</p>
-        <h1 className="text-2xl font-bold text-ink sm:text-3xl" data-testid="business-name">
+      <header className="pt-4 pb-8 sm:pt-8 sm:pb-10" data-testid="booking-header">
+        <BusinessMark
+          name={b.name}
+          size="lg"
+          className="size-12! text-xl! sm:size-14! sm:text-2xl!"
+        />
+        <h1
+          className="mt-5 font-display text-[30px] leading-[1.05] text-forest sm:text-[44px]"
+          data-testid="business-name"
+        >
           {b.name}
         </h1>
-        {b.address && (
-          <p className="flex items-center gap-1 text-sm text-muted">
-            <MapPin className="size-4" aria-hidden /> {b.address}
-          </p>
+        {b.description && (
+          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft">{b.description}</p>
         )}
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-muted">
+          {b.address && (
+            <span className="flex items-center gap-1.5">
+              <MapPin className="size-3.5" aria-hidden /> {b.address}
+            </span>
+          )}
+          {b.phone && (
+            <a href={`tel:${b.phone}`} className="flex items-center gap-1.5 hover:text-forest">
+              <Phone className="size-3.5" aria-hidden /> {b.phone}
+            </a>
+          )}
+        </div>
       </header>
 
-      <Card className="p-4 sm:p-6">
-        <div data-testid="booking-page">
-          {step < 4 && (
-            <div className="mb-6 space-y-4">
-              <StepIndicator current={step} />
-              {(service || staff || slot) && (
-                <Summary service={service} staff={staff} slot={slot} tz={b.timezone} />
-              )}
-            </div>
-          )}
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+        <div data-testid="booking-page" id="booking-steps" className="min-w-0 scroll-mt-4">
+          <div className="mb-6 space-y-4">
+            <StepIndicator current={step} />
+            {(service || staff || slot) && (
+              <MobileSummary service={service} staff={staff} slot={slot} tz={b.timezone} />
+            )}
+          </div>
 
           {step === 0 && (
-            <Section title="Choose a service" testId="step-service">
+            <Step title="What would you like to book?" testId="step-service">
               {services.isLoading ? (
                 <Spinner />
               ) : services.isError ? (
@@ -159,15 +209,15 @@ export default function BookingPage() {
                     setService(s);
                     setStaff(null);
                     setSlot(null);
-                    setStep(1);
+                    goTo(1);
                   }}
                 />
               )}
-            </Section>
+            </Step>
           )}
 
           {step === 1 && (
-            <Section title="Choose a professional" testId="step-staff" onBack={() => setStep(0)}>
+            <Step title="Who would you like to see?" testId="step-staff" onBack={() => goTo(0)}>
               {staffList.isLoading ? (
                 <Spinner />
               ) : staffList.isError ? (
@@ -178,16 +228,16 @@ export default function BookingPage() {
                   onSelect={(s) => {
                     setStaff(s);
                     setSlot(null);
-                    setStep(2);
+                    goTo(2);
                   }}
                 />
               )}
-            </Section>
+            </Step>
           )}
 
           {step === 2 && (
-            <Section title="Choose a day and time" testId="step-datetime" onBack={() => setStep(1)}>
-              <div className="space-y-4">
+            <Step title="Pick a day and time" testId="step-datetime" onBack={() => goTo(1)}>
+              <div className="space-y-6">
                 <DayPicker
                   days={days}
                   selected={date}
@@ -196,23 +246,28 @@ export default function BookingPage() {
                     setSlot(null);
                   }}
                 />
-                <SlotPicker
-                  slots={availability.data?.slots}
-                  loading={availability.isLoading}
-                  error={availability.isError ? availability.error.message : null}
-                  onRetry={() => availability.refetch()}
-                  selected={slot?.start}
-                  onSelect={(s) => {
-                    setSlot(s);
-                    setStep(3);
-                  }}
-                />
+                <div>
+                  <p className="mb-3 text-sm font-semibold text-ink">
+                    {formatDay(date, { weekday: 'long', month: 'long' })}
+                  </p>
+                  <SlotPicker
+                    slots={availability.data?.slots}
+                    loading={availability.isLoading}
+                    error={availability.isError ? availability.error.message : null}
+                    onRetry={() => availability.refetch()}
+                    selected={slot?.start}
+                    onSelect={(s) => {
+                      setSlot(s);
+                      goTo(3);
+                    }}
+                  />
+                </div>
               </div>
-            </Section>
+            </Step>
           )}
 
           {step === 3 && (
-            <Section title="Your details" testId="step-details" onBack={() => setStep(2)}>
+            <Step title="Almost done" testId="step-details" onBack={() => goTo(2)}>
               <ClientDetailsForm
                 onSubmit={(values) => book.mutate(values)}
                 submitting={book.isPending}
@@ -224,33 +279,38 @@ export default function BookingPage() {
                     : null
                 }
               />
-            </Section>
+            </Step>
           )}
-
-          {step === 4 && booking && <Confirmation booking={booking} onRestart={restart} />}
         </div>
-      </Card>
+
+        <aside className="hidden lg:sticky lg:top-8 lg:block" aria-label="Your booking">
+          <SummaryPanel service={service} staff={staff} slot={slot} tz={b.timezone} />
+        </aside>
+      </div>
     </PageShell>
   );
 }
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-forest-50 to-canvas">
-      <nav className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
-        <Link to="/" aria-label="BookFlow home">
+    <div className="flex min-h-screen flex-col">
+      <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
+        <Link to="/" aria-label="BookFlow home" className="opacity-80 hover:opacity-100">
           <Logo />
         </Link>
-        <Link to="/login" className="text-sm text-ink-soft hover:text-ink">
+        <Link to="/login" className="text-[13px] font-semibold text-ink-soft hover:text-forest">
           Staff login
         </Link>
       </nav>
-      <main className="mx-auto max-w-3xl px-4 pb-16 pt-4">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 sm:px-6">{children}</main>
+      <footer className="border-t border-line py-6 text-center text-xs text-muted">
+        Online booking by <span className="font-semibold text-ink-soft">BookFlow</span>
+      </footer>
     </div>
   );
 }
 
-function Section({
+function Step({
   title,
   testId,
   onBack,
@@ -262,20 +322,20 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section data-testid={testId} aria-labelledby={`${testId}-title`}>
-      <div className="mb-4 flex items-center gap-2">
+    <section data-testid={testId} aria-labelledby={`${testId}-title`} className="animate-rise">
+      <div className="mb-4 flex items-center gap-1">
         {onBack && (
-          <Button
-            variant="ghost"
+          <IconButton
+            label="Go back"
             size="sm"
             onClick={onBack}
-            aria-label="Go back"
             data-testid="back-button"
+            className="-ml-2"
           >
             <ArrowLeft className="size-4" aria-hidden />
-          </Button>
+          </IconButton>
         )}
-        <h2 id={`${testId}-title`} className="text-lg font-semibold text-ink">
+        <h2 id={`${testId}-title`} className="text-xl font-bold tracking-tight">
           {title}
         </h2>
       </div>
@@ -284,39 +344,34 @@ function Section({
   );
 }
 
-function Summary({
-  service,
-  staff,
-  slot,
-  tz,
-}: {
+interface SummaryProps {
   service: Service | null;
   staff: StaffMember | null;
   slot: Slot | null;
   tz: string;
-}) {
+}
+
+/** Compact summary chips above the step on phones and tablets. */
+function MobileSummary({ service, staff, slot, tz }: SummaryProps) {
   return (
-    <dl
-      className="flex flex-wrap gap-x-5 gap-y-1 rounded-lg bg-canvas px-3 py-2 text-sm text-ink-soft"
-      data-testid="booking-summary"
-    >
+    <dl className="flex flex-wrap gap-1.5 text-[13px] lg:hidden" data-testid="booking-summary">
       {service && (
-        <div className="flex items-center gap-1">
+        <div className="rounded-sm bg-surface px-2 py-1 ring-1 ring-line">
           <dt className="sr-only">Service</dt>
-          <dd className="font-medium text-ink">{service.name}</dd>
-          <dd>· {formatPrice(service.price)}</dd>
+          <dd>
+            <span className="font-semibold">{service.name}</span>{' '}
+            <span className="text-muted">{formatPrice(service.price)}</span>
+          </dd>
         </div>
       )}
       {staff && (
-        <div className="flex items-center gap-1">
-          <User className="size-4" aria-hidden />
+        <div className="rounded-sm bg-surface px-2 py-1 ring-1 ring-line">
           <dt className="sr-only">Professional</dt>
           <dd>{staff.name}</dd>
         </div>
       )}
       {slot && (
-        <div className="flex items-center gap-1">
-          <Clock className="size-4" aria-hidden />
+        <div className="rounded-sm bg-surface px-2 py-1 ring-1 ring-line">
           <dt className="sr-only">Time</dt>
           <dd>
             {formatDay(toLocalDate(new Date(slot.start), tz))} · {formatTime(slot.start, tz)}
@@ -327,46 +382,126 @@ function Summary({
   );
 }
 
+/** Desktop side panel that fills in as the client progresses. */
+function SummaryPanel({ service, staff, slot, tz }: SummaryProps) {
+  const rows = [
+    {
+      label: 'Service',
+      value: service ? (
+        <>
+          {service.name}
+          <span className="block text-xs font-normal text-muted">
+            {formatDuration(service.durationMinutes)}
+          </span>
+        </>
+      ) : null,
+    },
+    {
+      label: 'Professional',
+      value: staff ? (
+        <span className="flex items-center gap-2">
+          <Avatar name={staff.name} color={staff.color} size="sm" /> {staff.name}
+        </span>
+      ) : null,
+    },
+    {
+      label: 'When',
+      value: slot ? (
+        <>
+          {formatDay(toLocalDate(new Date(slot.start), tz), { month: 'long' })}
+          <span className="block text-xs font-normal text-muted">
+            {formatTime(slot.start, tz)} – {formatTime(slot.end, tz)}
+          </span>
+        </>
+      ) : null,
+    },
+  ];
+  return (
+    <div className="rounded-lg border border-line bg-surface" data-testid="booking-summary-panel">
+      <p className="eyebrow border-b border-line px-5 py-3">Your booking</p>
+      <dl className="divide-y divide-line">
+        {rows.map((r) => (
+          <div key={r.label} className="px-5 py-3.5">
+            <dt className="text-xs text-muted">{r.label}</dt>
+            <dd className="mt-0.5 text-sm font-semibold">
+              {r.value ?? <span className="font-normal text-faint">Not selected</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <div className="flex items-baseline justify-between border-t border-line bg-canvas/60 px-5 py-4">
+        <span className="text-sm text-muted">Total</span>
+        <span className="tabular text-lg font-bold">
+          {service ? formatPrice(service.price) : '—'}
+        </span>
+      </div>
+      <p className="px-5 py-3 text-xs text-muted">Pay at the venue. No account needed.</p>
+    </div>
+  );
+}
+
 function Confirmation({ booking, onRestart }: { booking: BookingSummary; onRestart: () => void }) {
   const tz = booking.business.timezone;
   return (
     <div
-      className="flex flex-col items-center gap-4 py-4 text-center"
+      className="mx-auto max-w-md animate-rise py-6 text-center sm:py-12"
       data-testid="booking-confirmation"
     >
-      <span className="grid size-14 place-items-center rounded-full bg-moss-50 text-moss">
-        <CalendarCheck className="size-7" aria-hidden />
+      <span className="mx-auto grid size-14 place-items-center rounded-full bg-forest text-sand">
+        <Check className="size-7" strokeWidth={2.5} aria-hidden />
       </span>
-      <div>
-        <h2 className="text-xl font-semibold text-ink">
-          You're booked, {booking.clientName.split(' ')[0]}!
-        </h2>
-        <p className="text-sm text-muted">Show this code when you arrive.</p>
-      </div>
-      <p
-        className="rounded-lg border-2 border-dashed border-brand-300 bg-forest-50 px-6 py-3 font-mono text-2xl font-bold tracking-widest text-forest"
-        data-testid="booking-code"
-      >
-        {booking.code}
+      <h1 className="mt-6 font-display text-[36px] leading-tight text-forest">
+        You’re booked, {booking.clientName.split(' ')[0]}.
+      </h1>
+      <p className="mt-2 text-sm text-muted">
+        We’re expecting you at {booking.business.name}. Keep this code handy.
       </p>
-      <dl className="grid w-full max-w-sm grid-cols-2 gap-y-2 text-left text-sm">
-        <dt className="text-muted">Service</dt>
-        <dd className="font-medium text-ink">{booking.service.name}</dd>
-        <dt className="text-muted">Professional</dt>
-        <dd className="font-medium text-ink">{booking.staff.name}</dd>
-        <dt className="text-muted">When</dt>
-        <dd className="font-medium text-ink" data-testid="booking-datetime">
-          {formatDay(toLocalDate(new Date(booking.startsAt), tz))},{' '}
-          {formatTime(booking.startsAt, tz)}
-        </dd>
-        <dt className="text-muted">Duration</dt>
-        <dd className="font-medium text-ink">{formatDuration(booking.service.durationMinutes)}</dd>
-        <dt className="text-muted">Price</dt>
-        <dd className="font-medium text-ink">{formatPrice(booking.price)}</dd>
-      </dl>
-      <Button variant="secondary" onClick={onRestart} data-testid="book-another">
-        Book another appointment
-      </Button>
+
+      <div className="mt-8 overflow-hidden rounded-lg border border-line bg-surface text-left">
+        <div className="border-b border-dashed border-line-strong px-6 py-5 text-center">
+          <p className="eyebrow">Booking code</p>
+          <p
+            className="mt-1 font-mono text-[28px] font-bold tracking-[0.18em] text-forest"
+            data-testid="booking-code"
+          >
+            {booking.code}
+          </p>
+        </div>
+        <dl className="grid grid-cols-[110px_1fr] gap-x-4 gap-y-3 px-6 py-5 text-sm">
+          <dt className="text-muted">When</dt>
+          <dd className="font-semibold" data-testid="booking-datetime">
+            {formatDay(toLocalDate(new Date(booking.startsAt), tz), { month: 'long' })},{' '}
+            {formatTime(booking.startsAt, tz)}
+          </dd>
+          <dt className="text-muted">Service</dt>
+          <dd className="font-semibold">
+            {booking.service.name}
+            <span className="ml-1.5 inline-flex items-center gap-1 font-normal text-muted">
+              <Clock className="size-3" aria-hidden />
+              {formatDuration(booking.service.durationMinutes)}
+            </span>
+          </dd>
+          <dt className="text-muted">Professional</dt>
+          <dd className="font-semibold">{booking.staff.name}</dd>
+          {booking.business.address && (
+            <>
+              <dt className="text-muted">Where</dt>
+              <dd>{booking.business.address}</dd>
+            </>
+          )}
+          <dt className="text-muted">Price</dt>
+          <dd className="tabular font-semibold">{formatPrice(booking.price)}</dd>
+        </dl>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+        <Button onClick={() => downloadIcs(booking)} data-testid="add-to-calendar">
+          <CalendarPlus className="size-4" aria-hidden /> Add to calendar
+        </Button>
+        <Button variant="secondary" onClick={onRestart} data-testid="book-another">
+          Book another appointment
+        </Button>
+      </div>
     </div>
   );
 }
