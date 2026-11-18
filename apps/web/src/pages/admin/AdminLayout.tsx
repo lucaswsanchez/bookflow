@@ -32,11 +32,11 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
-      <aside className="border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
+      <aside className="border-b border-line bg-white lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
         <div className="flex items-center justify-between px-4 py-4 lg:block lg:px-5">
           <Logo />
           <p
-            className="mt-1 hidden truncate text-xs text-slate-500 lg:block"
+            className="mt-1 hidden truncate text-xs text-muted lg:block"
             title={user?.business.name}
           >
             {user?.business.name}
@@ -53,8 +53,8 @@ export default function AdminLayout() {
                 clsx(
                   'flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-brand-50 text-brand-700'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                    ? 'bg-forest-50 text-forest'
+                    : 'text-ink-soft hover:bg-subtle hover:text-ink',
                 )
               }
             >
@@ -63,12 +63,12 @@ export default function AdminLayout() {
             </NavLink>
           ))}
         </nav>
-        <div className="hidden space-y-3 border-t border-slate-200 p-4 lg:absolute lg:inset-x-0 lg:bottom-0 lg:block">
+        <div className="hidden space-y-3 border-t border-line p-4 lg:absolute lg:inset-x-0 lg:bottom-0 lg:block">
           <a
             href={`/book/${user?.business.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 text-sm text-slate-600 hover:text-brand-700"
+            className="flex items-center gap-2 text-sm text-ink-soft hover:text-forest"
             data-testid="view-booking-page"
           >
             <ExternalLink className="size-4" aria-hidden /> Public booking page
@@ -78,8 +78,8 @@ export default function AdminLayout() {
       </aside>
 
       <div className="min-w-0">
-        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2 lg:hidden">
-          <span className="text-sm text-slate-600">{user?.name}</span>
+        <div className="flex items-center justify-between border-b border-line bg-white px-4 py-2 lg:hidden">
+          <span className="text-sm text-ink-soft">{user?.name}</span>
           <Button
             variant="ghost"
             size="sm"
@@ -102,10 +102,10 @@ function UserBox() {
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-slate-900" data-testid="current-user-name">
+        <p className="truncate text-sm font-medium text-ink" data-testid="current-user-name">
           {user?.name}
         </p>
-        <p className="text-xs text-slate-500" data-testid="current-user-role">
+        <p className="text-xs text-muted" data-testid="current-user-role">
           {user?.role === 'ADMIN' ? 'Administrator' : 'Staff'}
         </p>
       </div>
@@ -118,26 +118,6 @@ function UserBox() {
       >
         <LogOut className="size-4" aria-hidden />
       </Button>
-    </div>
-  );
-}
-
-export function PageHeader({
-  title,
-  description,
-  actions,
-}: {
-  title: string;
-  description?: string;
-  actions?: React.ReactNode;
-}) {
-  return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-        {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
-      </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }

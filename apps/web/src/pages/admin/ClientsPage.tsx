@@ -16,7 +16,7 @@ import {
 } from '../../components/ui';
 import { api } from '../../lib/api';
 import type { Client } from '../../lib/types';
-import { PageHeader } from './AdminLayout';
+import { PageHeader } from '../../components/ui';
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(80),
@@ -59,7 +59,7 @@ export default function ClientsPage() {
       />
       <div className="relative mb-4 max-w-sm">
         <Search
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400"
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-faint"
           aria-hidden
         />
         <Input
@@ -87,7 +87,7 @@ export default function ClientsPage() {
       {clients.data && clients.data.length > 0 && (
         <Card className="overflow-x-auto">
           <table className="w-full text-sm" data-testid="clients-table">
-            <thead className="border-b border-slate-200 text-left text-xs uppercase text-slate-500">
+            <thead className="border-b border-line text-left text-xs uppercase text-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Phone</th>
@@ -98,15 +98,13 @@ export default function ClientsPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-subtle">
               {clients.data.map((c) => (
                 <tr key={c.id} data-testid="client-row">
-                  <td className="px-4 py-3 font-medium text-slate-900">{c.name}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-slate-700">{c.phone}</td>
-                  <td className="hidden px-4 py-3 text-slate-700 sm:table-cell">
-                    {c.email ?? '—'}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">{c._count?.appointments ?? 0}</td>
+                  <td className="px-4 py-3 font-medium text-ink">{c.name}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-ink-soft">{c.phone}</td>
+                  <td className="hidden px-4 py-3 text-ink-soft sm:table-cell">{c.email ?? '—'}</td>
+                  <td className="px-4 py-3 text-ink-soft">{c._count?.appointments ?? 0}</td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-1">
                       <Button
@@ -203,7 +201,7 @@ function ClientForm({ client, onDone }: { client: Client | null; onDone: () => v
         <Input id="client-notes" {...register('notes')} />
       </Field>
       {save.isError && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-danger">
           {save.error.message}
         </p>
       )}

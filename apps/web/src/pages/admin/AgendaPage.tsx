@@ -26,7 +26,7 @@ import {
 } from '../../lib/format';
 import { STATUS_LABELS } from '../../lib/status';
 import type { Appointment, AppointmentStatus, StaffMember } from '../../lib/types';
-import { PageHeader } from './AdminLayout';
+import { PageHeader } from '../../components/ui';
 
 type View = 'day' | 'week';
 const DAY_START = 8 * 60;
@@ -129,7 +129,7 @@ export default function AgendaPage() {
       <Card className="mb-4 flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <div
-            className="inline-flex rounded-lg border border-slate-200 p-0.5"
+            className="inline-flex rounded-lg border border-line p-0.5"
             role="group"
             aria-label="View"
           >
@@ -142,7 +142,7 @@ export default function AgendaPage() {
                 data-testid={`agenda-view-${v}`}
                 className={clsx(
                   'rounded-md px-3 py-1.5 text-sm font-medium capitalize',
-                  view === v ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100',
+                  view === v ? 'bg-forest text-white' : 'text-ink-soft hover:bg-subtle',
                 )}
               >
                 {v}
@@ -175,20 +175,20 @@ export default function AgendaPage() {
           >
             <ChevronRight className="size-4" aria-hidden />
           </Button>
-          <span className="ml-1 text-sm font-medium text-slate-900" data-testid="agenda-range">
+          <span className="ml-1 text-sm font-medium text-ink" data-testid="agenda-range">
             {view === 'day'
               ? formatDay(date, { month: 'long' })
               : `${formatDay(from, { weekday: undefined })} – ${formatDay(to, { weekday: undefined })}`}
           </span>
         </div>
         {isAdmin && (
-          <label className="flex items-center gap-2 text-sm text-slate-600">
+          <label className="flex items-center gap-2 text-sm text-ink-soft">
             Staff
             <select
               value={staffId}
               onChange={(e) => setStaffId(e.target.value)}
               data-testid="agenda-staff-filter"
-              className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"
+              className="rounded-lg border border-line-strong bg-white px-2 py-1.5 text-sm"
             >
               <option value="">Everyone</option>
               {staff.data?.map((s) => (
@@ -220,13 +220,13 @@ export default function AgendaPage() {
               <h3
                 className={clsx(
                   'mb-2 text-sm font-semibold',
-                  col.date === today ? 'text-brand-700' : 'text-slate-700',
+                  col.date === today ? 'text-forest' : 'text-ink-soft',
                 )}
               >
                 {col.title}
               </h3>
               <ul className="space-y-2">
-                {col.items.length === 0 && <li className="text-xs text-slate-400">—</li>}
+                {col.items.length === 0 && <li className="text-xs text-faint">—</li>}
                 {col.items.map((a) => (
                   <li key={a.id}>
                     <AppointmentCard
@@ -253,10 +253,10 @@ export default function AgendaPage() {
           <div className="space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-lg font-semibold text-slate-900">{selected.client.name}</p>
+                <p className="text-lg font-semibold text-ink">{selected.client.name}</p>
                 <a
                   href={`tel:${selected.client.phone}`}
-                  className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-700"
+                  className="inline-flex items-center gap-1 text-sm text-muted hover:text-forest"
                 >
                   <Phone className="size-3.5" aria-hidden /> {selected.client.phone}
                 </a>
@@ -264,28 +264,28 @@ export default function AgendaPage() {
               <StatusBadge status={selected.status} />
             </div>
             <dl className="grid grid-cols-2 gap-y-2 text-sm">
-              <dt className="text-slate-500">When</dt>
+              <dt className="text-muted">When</dt>
               <dd className="font-medium">
                 {formatDay(toLocalDate(new Date(selected.startsAt), tz))},{' '}
                 {formatTime(selected.startsAt, tz)}–{formatTime(selected.endsAt, tz)}
               </dd>
-              <dt className="text-slate-500">Service</dt>
+              <dt className="text-muted">Service</dt>
               <dd className="font-medium">{selected.service.name}</dd>
-              <dt className="text-slate-500">Professional</dt>
+              <dt className="text-muted">Professional</dt>
               <dd className="font-medium">{selected.staff.name}</dd>
-              <dt className="text-slate-500">Price</dt>
+              <dt className="text-muted">Price</dt>
               <dd className="font-medium">{formatPrice(selected.price)}</dd>
-              <dt className="text-slate-500">Code</dt>
+              <dt className="text-muted">Code</dt>
               <dd className="font-mono font-medium">{selected.code}</dd>
               {selected.notes && (
                 <>
-                  <dt className="text-slate-500">Notes</dt>
+                  <dt className="text-muted">Notes</dt>
                   <dd>{selected.notes}</dd>
                 </>
               )}
             </dl>
             <div>
-              <p className="mb-2 text-sm font-medium text-slate-700">Change status</p>
+              <p className="mb-2 text-sm font-medium text-ink-soft">Change status</p>
               <div className="grid grid-cols-2 gap-2" data-testid="status-actions">
                 {STATUSES.map((s) => (
                   <Button
@@ -302,7 +302,7 @@ export default function AgendaPage() {
                 ))}
               </div>
               {updateStatus.isError && (
-                <p role="alert" className="mt-2 text-sm text-red-600">
+                <p role="alert" className="mt-2 text-sm text-danger">
                   {updateStatus.error.message}
                 </p>
               )}
@@ -337,12 +337,12 @@ function TimeGrid({
   return (
     <Card className="overflow-x-auto">
       <div className="flex min-w-[640px]" data-testid="agenda-day">
-        <div className="w-14 shrink-0 border-r border-slate-100 pt-10">
+        <div className="w-14 shrink-0 border-r border-subtle pt-10">
           <div className="relative" style={{ height }}>
             {hours.map((m) => (
               <span
                 key={m}
-                className="absolute right-2 -translate-y-1/2 text-xs text-slate-400"
+                className="absolute right-2 -translate-y-1/2 text-xs text-faint"
                 style={{ top: (m - DAY_START) * PX_PER_MIN }}
               >
                 {minutesToTime(m)}
@@ -351,8 +351,8 @@ function TimeGrid({
           </div>
         </div>
         {columns.map((col) => (
-          <div key={col.key} className="min-w-40 flex-1 border-r border-slate-100 last:border-r-0">
-            <div className="flex h-10 items-center gap-2 border-b border-slate-100 px-3 text-sm font-medium text-slate-700">
+          <div key={col.key} className="min-w-40 flex-1 border-r border-subtle last:border-r-0">
+            <div className="flex h-10 items-center gap-2 border-b border-subtle px-3 text-sm font-medium text-ink-soft">
               {col.color && (
                 <span
                   className="size-2.5 rounded-full"
@@ -366,7 +366,7 @@ function TimeGrid({
               {hours.map((m) => (
                 <div
                   key={m}
-                  className="absolute inset-x-0 border-t border-slate-100"
+                  className="absolute inset-x-0 border-t border-subtle"
                   style={{ top: (m - DAY_START) * PX_PER_MIN }}
                   aria-hidden
                 />
@@ -414,15 +414,15 @@ function AppointmentCard({
       data-testid="appointment-card"
       data-status={a.status}
       className={clsx(
-        'h-full w-full overflow-hidden rounded-md border-l-4 bg-white px-2 py-1 text-left text-xs shadow-sm ring-1 ring-slate-200 transition hover:ring-brand-400',
+        'h-full w-full overflow-hidden rounded-md border-l-4 bg-white px-2 py-1 text-left text-xs shadow-soft ring-1 ring-line transition hover:ring-brand-400',
         cancelled && 'opacity-50 line-through',
         compact && 'py-1.5',
       )}
       style={{ borderLeftColor: a.staff.color }}
     >
-      <span className="font-semibold text-slate-900">{formatTime(a.startsAt, tz)}</span>{' '}
-      <span className="text-slate-700">{a.client.name}</span>
-      <span className="block truncate text-slate-500">
+      <span className="font-semibold text-ink">{formatTime(a.startsAt, tz)}</span>{' '}
+      <span className="text-ink-soft">{a.client.name}</span>
+      <span className="block truncate text-muted">
         {a.service.name}
         {compact && ` · ${a.staff.name.split(' ')[0]}`}
       </span>

@@ -17,7 +17,7 @@ import {
 import { api } from '../../lib/api';
 import { formatDuration, formatPrice, slugify } from '../../lib/format';
 import type { Service } from '../../lib/types';
-import { PageHeader } from './AdminLayout';
+import { PageHeader } from '../../components/ui';
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(80),
@@ -62,7 +62,7 @@ export default function ServicesPage() {
       {services.data && services.data.length > 0 && (
         <Card className="overflow-x-auto">
           <table className="w-full text-sm" data-testid="services-table">
-            <thead className="border-b border-slate-200 text-left text-xs uppercase text-slate-500">
+            <thead className="border-b border-line text-left text-xs uppercase text-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">Service</th>
                 <th className="px-4 py-3 font-medium">Duration</th>
@@ -73,17 +73,17 @@ export default function ServicesPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-subtle">
               {services.data.map((s) => (
                 <tr key={s.id} data-testid={`service-row-${slugify(s.name)}`}>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-900">{s.name}</p>
-                    {s.description && <p className="text-xs text-slate-500">{s.description}</p>}
+                    <p className="font-medium text-ink">{s.name}</p>
+                    {s.description && <p className="text-xs text-muted">{s.description}</p>}
                   </td>
-                  <td className="px-4 py-3 text-slate-700">{formatDuration(s.durationMinutes)}</td>
-                  <td className="px-4 py-3 font-medium text-slate-900">{formatPrice(s.price)}</td>
+                  <td className="px-4 py-3 text-ink-soft">{formatDuration(s.durationMinutes)}</td>
+                  <td className="px-4 py-3 font-medium text-ink">{formatPrice(s.price)}</td>
                   <td className="px-4 py-3">
-                    <span className={s.active ? 'text-emerald-700' : 'text-slate-400'}>
+                    <span className={s.active ? 'text-moss' : 'text-faint'}>
                       {s.active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
@@ -205,12 +205,12 @@ function ServiceForm({ service, onDone }: { service: Service | null; onDone: () 
           />
         </Field>
       </div>
-      <label className="flex items-center gap-2 text-sm text-slate-700">
-        <input type="checkbox" className="size-4 accent-brand-600" {...register('active')} /> Active
+      <label className="flex items-center gap-2 text-sm text-ink-soft">
+        <input type="checkbox" className="size-4 accent-forest" {...register('active')} /> Active
         (bookable)
       </label>
       {save.isError && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-danger">
           {save.error.message}
         </p>
       )}

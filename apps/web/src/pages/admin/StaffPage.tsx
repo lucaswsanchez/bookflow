@@ -14,7 +14,7 @@ import {
 import { api } from '../../lib/api';
 import { minutesToTime, slugify, timeToMinutes, WEEKDAYS } from '../../lib/format';
 import type { Service, StaffMember, WorkingHours } from '../../lib/types';
-import { PageHeader } from './AdminLayout';
+import { PageHeader } from '../../components/ui';
 
 // Monday-first order for display
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -75,8 +75,8 @@ export default function StaffPage() {
                       .slice(0, 2)}
                   </span>
                   <div>
-                    <p className="font-semibold text-slate-900">{s.name}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="font-semibold text-ink">{s.name}</p>
+                    <p className="text-xs text-muted">
                       {s.title ?? 'Staff'}
                       {!s.active && ' · Inactive'}
                       {s.user && ` · ${s.user.email}`}
@@ -111,7 +111,7 @@ export default function StaffPage() {
                 {s.services?.map((sv) => (
                   <span
                     key={sv.id}
-                    className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
+                    className="rounded-full bg-subtle px-2 py-0.5 text-xs text-ink-soft"
                   >
                     {sv.name}
                   </span>
@@ -120,8 +120,8 @@ export default function StaffPage() {
               <dl className="mt-auto grid grid-cols-[3rem_1fr] gap-y-1 text-xs">
                 {summarizeHours(s.workingHours).map(({ weekday, ranges }) => (
                   <div key={weekday} className="contents">
-                    <dt className="text-slate-500">{WEEKDAYS[weekday].slice(0, 3)}</dt>
-                    <dd className={ranges.length ? 'text-slate-800' : 'text-slate-400'}>
+                    <dt className="text-muted">{WEEKDAYS[weekday].slice(0, 3)}</dt>
+                    <dd className={ranges.length ? 'text-ink' : 'text-faint'}>
                       {ranges.length ? ranges.join(', ') : 'Off'}
                     </dd>
                   </div>
@@ -221,7 +221,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
             type="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="h-10 w-14 cursor-pointer rounded-lg border border-slate-300"
+            className="h-10 w-14 cursor-pointer rounded-lg border border-line-strong"
           />
         </Field>
       </div>
@@ -234,13 +234,13 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
         />
       </Field>
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-slate-700">Services offered</legend>
+        <legend className="mb-2 text-sm font-medium text-ink-soft">Services offered</legend>
         <div className="grid grid-cols-2 gap-1">
           {services.data?.map((s) => (
-            <label key={s.id} className="flex items-center gap-2 text-sm text-slate-700">
+            <label key={s.id} className="flex items-center gap-2 text-sm text-ink-soft">
               <input
                 type="checkbox"
-                className="size-4 accent-brand-600"
+                className="size-4 accent-forest"
                 checked={serviceIds.includes(s.id)}
                 onChange={(e) =>
                   setServiceIds(
@@ -256,7 +256,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
         </div>
       </fieldset>
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-slate-700">Weekly hours</legend>
+        <legend className="mb-2 text-sm font-medium text-ink-soft">Weekly hours</legend>
         <div className="space-y-2">
           {WEEK_ORDER.map((d) => {
             const dayRanges = ranges.map((r, i) => ({ r, i })).filter(({ r }) => r.weekday === d);
@@ -266,12 +266,12 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
                 className="flex flex-wrap items-center gap-2 text-sm"
                 data-testid={`hours-${WEEKDAYS[d].toLowerCase()}`}
               >
-                <span className="w-10 text-slate-500">{WEEKDAYS[d].slice(0, 3)}</span>
-                {dayRanges.length === 0 && <span className="text-xs text-slate-400">Off</span>}
+                <span className="w-10 text-muted">{WEEKDAYS[d].slice(0, 3)}</span>
+                {dayRanges.length === 0 && <span className="text-xs text-faint">Off</span>}
                 {dayRanges.map(({ r, i }) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1 rounded-lg bg-slate-50 px-1.5 py-1"
+                    className="inline-flex items-center gap-1 rounded-lg bg-canvas px-1.5 py-1"
                   >
                     <input
                       type="time"
@@ -283,7 +283,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
                           ranges.map((x, j) => (j === i ? { ...x, start: e.target.value } : x)),
                         )
                       }
-                      className="rounded border border-slate-300 px-1 text-xs"
+                      className="rounded border border-line-strong px-1 text-xs"
                     />
                     –
                     <input
@@ -296,13 +296,13 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
                           ranges.map((x, j) => (j === i ? { ...x, end: e.target.value } : x)),
                         )
                       }
-                      className="rounded border border-slate-300 px-1 text-xs"
+                      className="rounded border border-line-strong px-1 text-xs"
                     />
                     <button
                       type="button"
                       aria-label="Remove range"
                       onClick={() => setRanges(ranges.filter((_, j) => j !== i))}
-                      className="text-slate-400 hover:text-red-600"
+                      className="text-faint hover:text-danger"
                     >
                       <X className="size-3.5" aria-hidden />
                     </button>
@@ -310,7 +310,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
                 ))}
                 <button
                   type="button"
-                  className="text-xs font-medium text-brand-700 hover:underline"
+                  className="text-xs font-medium text-forest hover:underline"
                   onClick={() =>
                     setRanges([...ranges, { weekday: d, start: '09:00', end: '13:00' }])
                   }
@@ -322,17 +322,17 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
           })}
         </div>
       </fieldset>
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-ink-soft">
         <input
           type="checkbox"
-          className="size-4 accent-brand-600"
+          className="size-4 accent-forest"
           checked={active}
           onChange={(e) => setActive(e.target.checked)}
         />{' '}
         Active (bookable)
       </label>
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-danger">
           {error}
         </p>
       )}

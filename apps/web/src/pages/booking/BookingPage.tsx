@@ -124,12 +124,12 @@ export default function BookingPage() {
   return (
     <PageShell>
       <header className="mb-6 space-y-1" data-testid="booking-header">
-        <p className="text-sm font-medium text-brand-700">Book an appointment</p>
-        <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl" data-testid="business-name">
+        <p className="text-sm font-medium text-forest">Book an appointment</p>
+        <h1 className="text-2xl font-bold text-ink sm:text-3xl" data-testid="business-name">
           {b.name}
         </h1>
         {b.address && (
-          <p className="flex items-center gap-1 text-sm text-slate-500">
+          <p className="flex items-center gap-1 text-sm text-muted">
             <MapPin className="size-4" aria-hidden /> {b.address}
           </p>
         )}
@@ -236,12 +236,12 @@ export default function BookingPage() {
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-50 to-slate-50">
+    <div className="min-h-screen bg-gradient-to-b from-forest-50 to-canvas">
       <nav className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
         <Link to="/" aria-label="BookFlow home">
           <Logo />
         </Link>
-        <Link to="/login" className="text-sm text-slate-600 hover:text-slate-900">
+        <Link to="/login" className="text-sm text-ink-soft hover:text-ink">
           Staff login
         </Link>
       </nav>
@@ -275,7 +275,7 @@ function Section({
             <ArrowLeft className="size-4" aria-hidden />
           </Button>
         )}
-        <h2 id={`${testId}-title`} className="text-lg font-semibold text-slate-900">
+        <h2 id={`${testId}-title`} className="text-lg font-semibold text-ink">
           {title}
         </h2>
       </div>
@@ -297,13 +297,13 @@ function Summary({
 }) {
   return (
     <dl
-      className="flex flex-wrap gap-x-5 gap-y-1 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600"
+      className="flex flex-wrap gap-x-5 gap-y-1 rounded-lg bg-canvas px-3 py-2 text-sm text-ink-soft"
       data-testid="booking-summary"
     >
       {service && (
         <div className="flex items-center gap-1">
           <dt className="sr-only">Service</dt>
-          <dd className="font-medium text-slate-900">{service.name}</dd>
+          <dd className="font-medium text-ink">{service.name}</dd>
           <dd>· {formatPrice(service.price)}</dd>
         </div>
       )}
@@ -334,37 +334,35 @@ function Confirmation({ booking, onRestart }: { booking: BookingSummary; onResta
       className="flex flex-col items-center gap-4 py-4 text-center"
       data-testid="booking-confirmation"
     >
-      <span className="grid size-14 place-items-center rounded-full bg-emerald-100 text-emerald-600">
+      <span className="grid size-14 place-items-center rounded-full bg-moss-50 text-moss">
         <CalendarCheck className="size-7" aria-hidden />
       </span>
       <div>
-        <h2 className="text-xl font-semibold text-slate-900">
+        <h2 className="text-xl font-semibold text-ink">
           You're booked, {booking.clientName.split(' ')[0]}!
         </h2>
-        <p className="text-sm text-slate-500">Show this code when you arrive.</p>
+        <p className="text-sm text-muted">Show this code when you arrive.</p>
       </div>
       <p
-        className="rounded-xl border-2 border-dashed border-brand-300 bg-brand-50 px-6 py-3 font-mono text-2xl font-bold tracking-widest text-brand-700"
+        className="rounded-lg border-2 border-dashed border-brand-300 bg-forest-50 px-6 py-3 font-mono text-2xl font-bold tracking-widest text-forest"
         data-testid="booking-code"
       >
         {booking.code}
       </p>
       <dl className="grid w-full max-w-sm grid-cols-2 gap-y-2 text-left text-sm">
-        <dt className="text-slate-500">Service</dt>
-        <dd className="font-medium text-slate-900">{booking.service.name}</dd>
-        <dt className="text-slate-500">Professional</dt>
-        <dd className="font-medium text-slate-900">{booking.staff.name}</dd>
-        <dt className="text-slate-500">When</dt>
-        <dd className="font-medium text-slate-900" data-testid="booking-datetime">
+        <dt className="text-muted">Service</dt>
+        <dd className="font-medium text-ink">{booking.service.name}</dd>
+        <dt className="text-muted">Professional</dt>
+        <dd className="font-medium text-ink">{booking.staff.name}</dd>
+        <dt className="text-muted">When</dt>
+        <dd className="font-medium text-ink" data-testid="booking-datetime">
           {formatDay(toLocalDate(new Date(booking.startsAt), tz))},{' '}
           {formatTime(booking.startsAt, tz)}
         </dd>
-        <dt className="text-slate-500">Duration</dt>
-        <dd className="font-medium text-slate-900">
-          {formatDuration(booking.service.durationMinutes)}
-        </dd>
-        <dt className="text-slate-500">Price</dt>
-        <dd className="font-medium text-slate-900">{formatPrice(booking.price)}</dd>
+        <dt className="text-muted">Duration</dt>
+        <dd className="font-medium text-ink">{formatDuration(booking.service.durationMinutes)}</dd>
+        <dt className="text-muted">Price</dt>
+        <dd className="font-medium text-ink">{formatPrice(booking.price)}</dd>
       </dl>
       <Button variant="secondary" onClick={onRestart} data-testid="book-another">
         Book another appointment

@@ -75,7 +75,7 @@ export function LoginForm({ onSubmit }: { onSubmit: (values: LoginValues) => Pro
       {error && (
         <p
           role="alert"
-          className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+          className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger"
           data-testid="login-error"
         >
           {error}
@@ -84,8 +84,8 @@ export function LoginForm({ onSubmit }: { onSubmit: (values: LoginValues) => Pro
       <Button type="submit" className="w-full" loading={isSubmitting} data-testid="login-submit">
         Log in
       </Button>
-      <div className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
-        <p className="mb-2 font-medium text-slate-700">Try a demo account</p>
+      <div className="rounded-lg bg-canvas p-3 text-sm text-ink-soft">
+        <p className="mb-2 font-medium text-ink-soft">Try a demo account</p>
         <div className="flex gap-2">
           <Button
             type="button"
@@ -120,14 +120,14 @@ export default function LoginPage() {
   if (status === 'authenticated') return <Navigate to={from} replace />;
 
   return (
-    <div className="grid min-h-screen place-items-center bg-gradient-to-b from-brand-50 to-slate-50 px-4">
+    <div className="grid min-h-screen place-items-center bg-gradient-to-b from-forest-50 to-canvas px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
           <Link to="/" aria-label="BookFlow home">
             <Logo className="text-xl" />
           </Link>
-          <h1 className="mt-4 text-2xl font-bold text-slate-900">Welcome back</h1>
-          <p className="text-sm text-slate-500">Log in to manage your agenda.</p>
+          <h1 className="mt-4 text-2xl font-bold text-ink">Welcome back</h1>
+          <p className="text-sm text-muted">Log in to manage your agenda.</p>
         </div>
         <Card className="p-6">
           <LoginForm
@@ -137,7 +137,7 @@ export default function LoginPage() {
             }}
           />
         </Card>
-        <p className="text-center text-xs text-slate-500">
+        <p className="text-center text-xs text-muted">
           First request may take ~50s while the free-tier server wakes up.
         </p>
       </div>
