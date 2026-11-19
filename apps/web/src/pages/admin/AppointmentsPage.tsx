@@ -292,7 +292,7 @@ export default function AppointmentsPage() {
                         >
                           <Td className="mono font-medium">
                             {formatTime(a.startsAt, tz)}
-                            <span className="ml-1 font-normal text-faint">
+                            <span className="ml-1 font-normal text-muted">
                               {formatTime(a.endsAt, tz)}
                             </span>
                           </Td>

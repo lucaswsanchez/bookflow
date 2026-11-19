@@ -634,7 +634,7 @@ export default function HomePage() {
                   <span className="block text-[15px] font-semibold tracking-[-0.01em]">
                     See the barbershop demo
                   </span>
-                  <span className="block text-[13px] text-accent-100">Book a real slot</span>
+                  <span className="block text-[13px] text-accent-50">Book a real slot</span>
                 </span>
                 <ArrowRight
                   className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5"
@@ -712,7 +712,7 @@ export default function HomePage() {
               <h2 className="text-[26px] leading-tight font-semibold tracking-[-0.03em] sm:text-[30px]">
                 See it with real data.
               </h2>
-              <p className="mt-2 text-[15px] text-accent-100">
+              <p className="mt-2 text-[15px] text-accent-50">
                 Book an appointment as a client, then find it in the agenda as the owner.
               </p>
             </div>

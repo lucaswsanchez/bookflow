@@ -39,7 +39,7 @@ export function StepIndicator({ current }: { current: number }) {
                 'max-sm:sr-only',
               )}
             >
-              <span className="mono text-[11px] text-faint">0{i + 1}</span>
+              <span className="mono text-[11px] text-muted">0{i + 1}</span>
               {label}
               {i < current && <span className="sr-only"> (done)</span>}
             </span>
@@ -269,7 +269,7 @@ export function SlotPicker({
           <div key={label}>
             <p className="eyebrow mb-2 flex items-center gap-1.5">
               <Icon className="size-3.5" aria-hidden /> {label}
-              <span className="text-faint">· {group.length}</span>
+              <span className="text-muted">· {group.length}</span>
             </p>
             <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6">
               {group.map((slot) => (

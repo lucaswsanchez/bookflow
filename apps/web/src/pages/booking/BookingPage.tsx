@@ -481,7 +481,7 @@ function SummaryPanel({ service, staff, slot, tz }: SummaryProps) {
           <div key={r.label} className="px-5 py-3.5">
             <dt className="text-xs text-muted">{r.label}</dt>
             <dd className="mt-0.5 text-sm font-medium">
-              {r.value ?? <span className="font-normal text-faint">Not selected</span>}
+              {r.value ?? <span className="font-normal text-muted">Not selected</span>}
             </dd>
           </div>
         ))}

@@ -178,7 +178,7 @@ export default function ServicesPage() {
                         </Td>
                         <Td>
                           {people.length === 0 ? (
-                            <span className="text-[13px] text-faint">Nobody yet</span>
+                            <span className="text-[13px] text-muted">Nobody yet</span>
                           ) : (
                             <AvatarStack people={people} />
                           )}

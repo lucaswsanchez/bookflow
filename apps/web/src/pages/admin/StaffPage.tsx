@@ -99,7 +99,7 @@ export default function StaffPage() {
                     </p>
                     <p className="truncate text-[13px] text-muted">{s.title ?? 'Staff'}</p>
                     {s.user && (
-                      <p className="truncate text-xs text-faint" title="Can log in">
+                      <p className="truncate text-xs text-muted" title="Can log in">
                         {s.user.email}
                       </p>
                     )}
@@ -109,7 +109,7 @@ export default function StaffPage() {
                   {s.services?.length ? (
                     s.services.map((sv) => <Badge key={sv.id}>{sv.name}</Badge>)
                   ) : (
-                    <span className="text-xs text-faint">No services assigned</span>
+                    <span className="text-xs text-muted">No services assigned</span>
                   )}
                 </div>
               </div>
@@ -130,7 +130,7 @@ export default function StaffPage() {
                         <p
                           className={clsx(
                             'text-[11px] font-semibold',
-                            ranges.length ? 'text-ink' : 'text-faint',
+                            ranges.length ? 'text-ink' : 'text-muted',
                           )}
                         >
                           {WEEKDAYS[d].slice(0, 3)}
@@ -145,7 +145,7 @@ export default function StaffPage() {
                             </p>
                           ))
                         ) : (
-                          <p className="mt-1 text-[11px] text-faint">Off</p>
+                          <p className="mt-1 text-[11px] text-muted">Off</p>
                         )}
                       </li>
                     );
@@ -361,12 +361,12 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
                 <span
                   className={clsx(
                     'w-24 font-semibold',
-                    dayRanges.length ? 'text-ink' : 'text-faint',
+                    dayRanges.length ? 'text-ink' : 'text-muted',
                   )}
                 >
                   {WEEKDAYS[d]}
                 </span>
-                {dayRanges.length === 0 && <span className="text-xs text-faint">Day off</span>}
+                {dayRanges.length === 0 && <span className="text-xs text-muted">Day off</span>}
                 {dayRanges.map(({ r, i }) => (
                   <span
                     key={i}
