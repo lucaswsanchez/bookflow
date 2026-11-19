@@ -44,7 +44,7 @@ export default function HomePage() {
         <Logo />
         <Link
           to="/login"
-          className="text-sm font-semibold text-ink-soft hover:text-forest"
+          className="text-sm font-semibold text-ink-soft hover:text-accent-ink"
           data-testid="nav-login"
         >
           Log in
@@ -53,8 +53,8 @@ export default function HomePage() {
 
       <main>
         <section className="mx-auto max-w-6xl px-4 pt-14 pb-20 sm:px-6 sm:pt-24">
-          <p className="eyebrow mb-5 text-moss">Online booking for small businesses</p>
-          <h1 className="max-w-4xl font-display text-[44px] leading-[1.02] text-forest sm:text-[72px]">
+          <p className="eyebrow mb-5 text-accent-ink">Online booking for small businesses</p>
+          <h1 className="max-w-4xl font-sans font-semibold tracking-tight text-[44px] leading-[1.02] text-accent-ink sm:text-[72px]">
             Stop booking appointments over WhatsApp.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-soft">
@@ -65,7 +65,7 @@ export default function HomePage() {
             <Link
               to={`/book/${DEMO_SLUG}`}
               data-testid="cta-book-demo"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-forest px-6 font-semibold text-white shadow-soft transition-colors hover:bg-forest-deep"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-accent px-6 font-semibold text-white shadow-soft transition-colors hover:bg-accent-deep"
             >
               Try the booking page <ArrowRight className="size-4" aria-hidden />
             </Link>
@@ -139,7 +139,7 @@ export default function HomePage() {
               key={title}
               className={`border-line py-8 sm:px-8 ${i % 2 === 0 ? 'sm:border-r sm:pl-0' : 'sm:pr-0'} ${i < 2 ? 'border-b' : 'border-b sm:border-b-0'}`}
             >
-              <Icon className="size-5 text-moss" aria-hidden />
+              <Icon className="size-5 text-accent-ink" aria-hidden />
               <h2 className="mt-4 text-lg font-bold tracking-tight">{title}</h2>
               <p className="mt-2 max-w-md text-[15px] leading-relaxed text-ink-soft">{text}</p>
             </div>
@@ -151,12 +151,12 @@ export default function HomePage() {
         Built by{' '}
         <a
           href="https://github.com/lucaswsanchez"
-          className="font-semibold text-ink-soft hover:text-forest"
+          className="font-semibold text-ink-soft hover:text-accent-ink"
         >
           Lucas Sanchez
         </a>{' '}
         ·{' '}
-        <a href="https://github.com/lucaswsanchez/bookflow" className="hover:text-forest">
+        <a href="https://github.com/lucaswsanchez/bookflow" className="hover:text-accent-ink">
           Source on GitHub
         </a>
       </footer>

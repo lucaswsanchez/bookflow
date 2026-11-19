@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   Scissors,
+  Settings2,
   UserRound,
   Users,
   X,
@@ -16,7 +17,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
 import { splitBusinessName } from '../../lib/format';
-import { Avatar, BusinessMark, IconButton, Logo, Spinner } from '../../components/ui';
+import { Avatar, BusinessMark, IconButton, LogoMark, Spinner } from '../../components/ui';
 
 interface NavItem {
   to: string;
@@ -62,31 +63,50 @@ const NAV: { title: string; items: NavItem[] }[] = [
       { to: '/app/clients', label: 'Clients', icon: Users, testId: 'nav-clients', adminOnly: true },
     ],
   },
+  {
+    title: 'Settings',
+    items: [
+      {
+        to: '/app/settings',
+        label: 'Business settings',
+        icon: Settings2,
+        testId: 'nav-settings',
+        adminOnly: true,
+      },
+    ],
+  },
 ];
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const business = splitBusinessName(user?.business.name);
 
   // Close the mobile drawer on navigation.
   useEffect(() => setOpen(false), [location.pathname]);
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[256px_1fr]">
+    <div className="min-h-screen lg:grid lg:grid-cols-[232px_1fr]">
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-canvas/95 px-3 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-30 flex h-14 items-center justify-between bg-night px-3 text-white lg:hidden">
         <div className="flex min-w-0 items-center gap-2">
-          <IconButton label="Open menu" onClick={() => setOpen(true)} data-testid="menu-button">
+          <IconButton
+            label="Open menu"
+            onClick={() => setOpen(true)}
+            data-testid="menu-button"
+            className="text-night-text hover:bg-night-3 hover:text-white"
+          >
             <Menu className="size-5" aria-hidden />
           </IconButton>
-          <BusinessMark name={user?.business.name ?? ''} size="sm" />
-          <span className="truncate text-sm font-bold">{shortName(user?.business.name)}</span>
+          <LogoMark inverted className="size-6" />
+          <span className="truncate text-sm font-medium">{business.name}</span>
         </div>
         <IconButton
           label="Log out"
           onClick={() => void logout()}
           data-testid="logout-button-mobile"
+          className="text-night-text hover:bg-night-3 hover:text-white"
         >
           <LogOut className="size-4" aria-hidden />
         </IconButton>
@@ -95,7 +115,7 @@ export default function AdminLayout() {
       {/* Drawer backdrop (mobile) */}
       {open && (
         <div
-          className="fixed inset-0 z-40 animate-fade-in bg-ink/30 lg:hidden"
+          className="fixed inset-0 z-40 animate-fade-in bg-night/50 lg:hidden"
           onClick={() => setOpen(false)}
           aria-hidden
         />
@@ -103,37 +123,34 @@ export default function AdminLayout() {
 
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col border-r border-line bg-surface transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-auto lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col bg-night text-night-text transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-auto lg:translate-x-0',
           open ? 'translate-x-0 shadow-pop' : '-translate-x-full',
         )}
         aria-label="Sidebar"
       >
-        <div className="flex items-center gap-3 px-4 pt-5 pb-4">
-          <BusinessMark name={user?.business.name ?? ''} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold" title={user?.business.name}>
-              {shortName(user?.business.name)}
-            </p>
-            <p className="truncate text-xs text-muted">{locationOf(user?.business.name)}</p>
-          </div>
+        <div className="flex h-14 items-center justify-between gap-2 px-4">
+          <span className="inline-flex items-center gap-2 text-[14px] font-semibold tracking-[-0.02em] text-white">
+            <LogoMark inverted className="size-6" />
+            BookFlow
+          </span>
           <IconButton
             label="Close menu"
             size="sm"
             onClick={() => setOpen(false)}
-            className="lg:hidden"
+            className="text-night-muted hover:bg-night-3 hover:text-white lg:hidden"
           >
             <X className="size-4" aria-hidden />
           </IconButton>
         </div>
 
-        <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-2">
+        <nav aria-label="Main" className="flex-1 overflow-y-auto px-2.5 pt-2 pb-4">
           {NAV.map((group) => {
             const items = group.items.filter((n) => !n.adminOnly || user?.role === 'ADMIN');
             if (items.length === 0) return null;
             return (
               <div key={group.title} className="mb-5">
-                <p className="eyebrow px-3 pb-2">{group.title}</p>
-                <ul className="space-y-0.5">
+                <p className="eyebrow px-2.5 pb-1.5 text-night-muted/80">{group.title}</p>
+                <ul className="space-y-px">
                   {items.map(({ to, label, icon: Icon, testId, end }) => (
                     <li key={to}>
                       <NavLink
@@ -142,15 +159,22 @@ export default function AdminLayout() {
                         data-testid={testId}
                         className={({ isActive }) =>
                           clsx(
-                            'group flex h-9 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors',
+                            'relative flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium transition-colors',
                             isActive
-                              ? 'bg-forest text-white'
-                              : 'text-ink-soft hover:bg-subtle hover:text-ink',
+                              ? 'bg-night-3 text-white before:absolute before:top-2 before:bottom-2 before:-left-2.5 before:w-0.5 before:rounded-r before:bg-accent'
+                              : 'text-night-muted hover:bg-night-2 hover:text-white',
                           )
                         }
                       >
-                        <Icon className="size-4 shrink-0" aria-hidden />
-                        {label}
+                        {({ isActive }) => (
+                          <>
+                            <Icon
+                              className={clsx('size-4 shrink-0', isActive && 'text-accent')}
+                              aria-hidden
+                            />
+                            {label}
+                          </>
+                        )}
                       </NavLink>
                     </li>
                   ))}
@@ -163,22 +187,44 @@ export default function AdminLayout() {
             href={`/book/${user?.business.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="mx-0 mt-2 flex items-center justify-between rounded-md border border-dashed border-line-strong px-3 py-2.5 text-[13px] font-semibold text-ink-soft transition-colors hover:border-forest hover:text-forest"
+            className="flex h-8 items-center justify-between rounded-md px-2.5 text-[13px] font-medium text-night-muted transition-colors hover:bg-night-2 hover:text-white"
             data-testid="view-booking-page"
           >
             Public booking page
-            <ArrowUpRight className="size-4" aria-hidden />
+            <ArrowUpRight className="size-3.5" aria-hidden />
           </a>
         </nav>
 
-        <div className="border-t border-line p-3">
-          <div className="flex items-center gap-3 rounded-md px-2 py-1.5">
-            <Avatar name={user?.name ?? '?'} color="#54856b" />
+        <div className="space-y-1 border-t border-night-line p-2.5">
+          {/* Selected business (one per account) */}
+          <div
+            className="flex items-center gap-2.5 rounded-md bg-night-2 px-2.5 py-2"
+            data-testid="current-business"
+          >
+            <BusinessMark name={user?.business.name ?? ''} size="sm" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold" data-testid="current-user-name">
+              <p
+                className="truncate text-[13px] font-medium text-white"
+                title={user?.business.name}
+              >
+                {business.name}
+              </p>
+              <p className="truncate font-mono text-[11px] text-night-muted">
+                /{user?.business.slug}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 px-2.5 py-1.5">
+            <Avatar name={user?.name ?? '?'} color="#526ff5" size="sm" />
+            <div className="min-w-0 flex-1">
+              <p
+                className="truncate text-[13px] font-medium text-white"
+                data-testid="current-user-name"
+              >
                 {user?.name}
               </p>
-              <p className="text-xs text-muted" data-testid="current-user-role">
+              <p className="font-mono text-[11px] text-night-muted" data-testid="current-user-role">
                 {user?.role === 'ADMIN' ? 'Administrator' : 'Staff'}
               </p>
             </div>
@@ -187,13 +233,17 @@ export default function AdminLayout() {
               size="sm"
               onClick={() => void logout()}
               data-testid="logout-button"
+              className="text-night-muted hover:bg-night-3 hover:text-white"
             >
               <LogOut className="size-4" aria-hidden />
             </IconButton>
           </div>
-          <div className="mt-2 flex items-center justify-between px-2 text-[11px] text-faint">
-            <Logo className="scale-[0.8] origin-left opacity-70" />
-            <NavLink to="/app/ui" className="hover:text-ink" data-testid="nav-ui-kit">
+          <div className="flex justify-end px-2.5">
+            <NavLink
+              to="/app/ui"
+              className="font-mono text-[10.5px] text-night-muted/70 hover:text-white"
+              data-testid="nav-ui-kit"
+            >
               UI kit
             </NavLink>
           </div>
@@ -201,7 +251,7 @@ export default function AdminLayout() {
       </aside>
 
       <div className="min-w-0">
-        <main className="mx-auto max-w-[1240px] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        <main className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <Suspense fallback={<Spinner />}>
             <Outlet />
           </Suspense>
@@ -209,12 +259,4 @@ export default function AdminLayout() {
       </div>
     </div>
   );
-}
-
-function shortName(name = '') {
-  return splitBusinessName(name).name;
-}
-
-function locationOf(name = '') {
-  return splitBusinessName(name).place ?? 'Business workspace';
 }

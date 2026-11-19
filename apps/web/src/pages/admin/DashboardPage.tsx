@@ -159,7 +159,7 @@ export default function DashboardPage() {
                 action={
                   <Link
                     to="/app/agenda"
-                    className="inline-flex items-center gap-1 text-[13px] font-semibold text-forest hover:underline"
+                    className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent-ink hover:underline"
                   >
                     Agenda <ArrowRight className="size-3.5" aria-hidden />
                   </Link>
@@ -278,7 +278,7 @@ function Meter({ value }: { value: number }) {
   return (
     <div className="h-1.5 overflow-hidden rounded-full bg-subtle">
       <div
-        className="h-full rounded-full bg-moss transition-[width] duration-500"
+        className="h-full rounded-full bg-accent transition-[width] duration-500"
         style={{ width: `${Math.round(value * 100)}%` }}
       />
     </div>
@@ -311,13 +311,16 @@ function WeekBars({
           <div
             className={clsx(
               'w-full max-w-12 rounded-t-sm transition-[height] duration-500',
-              d.date === today ? 'bg-forest' : d.date < today ? 'bg-sage' : 'bg-sage-100',
+              d.date === today ? 'bg-accent' : d.date < today ? 'bg-success' : 'bg-accent-100',
             )}
             style={{ height: `${Math.max((d.appointments / max) * 100, 2)}%` }}
             title={`${d.appointments} appointments · ${formatPrice(d.revenue)}`}
           />
           <span
-            className={clsx('text-xs', d.date === today ? 'font-bold text-forest' : 'text-muted')}
+            className={clsx(
+              'text-xs',
+              d.date === today ? 'font-bold text-accent-ink' : 'text-muted',
+            )}
           >
             {formatDay(d.date, { weekday: 'short', month: undefined, day: undefined })}
           </span>

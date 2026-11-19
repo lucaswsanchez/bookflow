@@ -97,7 +97,7 @@ export function LoginForm({ onSubmit }: { onSubmit: (values: LoginValues) => Pro
             type="button"
             onClick={() => fill(DEMO.admin)}
             data-testid="fill-demo-admin"
-            className="rounded-md border border-line-strong px-3 py-2.5 text-left transition-colors hover:border-forest hover:bg-forest-50"
+            className="rounded-md border border-line-strong px-3 py-2.5 text-left transition-colors hover:border-accent hover:bg-accent-50"
           >
             <span className="block text-[13px] font-bold">Admin</span>
             <span className="block truncate text-xs text-muted">Full access</span>
@@ -106,7 +106,7 @@ export function LoginForm({ onSubmit }: { onSubmit: (values: LoginValues) => Pro
             type="button"
             onClick={() => fill(DEMO.staff)}
             data-testid="fill-demo-staff"
-            className="rounded-md border border-line-strong px-3 py-2.5 text-left transition-colors hover:border-forest hover:bg-forest-50"
+            className="rounded-md border border-line-strong px-3 py-2.5 text-left transition-colors hover:border-accent hover:bg-accent-50"
           >
             <span className="block text-[13px] font-bold">Staff</span>
             <span className="block truncate text-xs text-muted">Own agenda only</span>
@@ -127,20 +127,20 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-forest p-12 text-white lg:flex">
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-accent p-12 text-white lg:flex">
         <Link to="/" aria-label="BookFlow home">
           <Logo inverted />
         </Link>
         <div className="max-w-md">
-          <p className="font-display text-[44px] leading-[1.05] text-sand-50">
+          <p className="font-sans font-semibold tracking-tight text-[44px] leading-[1.05] text-signal-50">
             Your whole day, in one calm agenda.
           </p>
-          <p className="mt-5 text-[15px] leading-relaxed text-sage">
+          <p className="mt-5 text-[15px] leading-relaxed text-night-muted">
             Clients book online, the schedule fills itself, and every professional sees exactly what
             is next.
           </p>
         </div>
-        <ul className="grid grid-cols-3 gap-6 border-t border-white/10 pt-6 text-[13px] text-sage">
+        <ul className="grid grid-cols-3 gap-6 border-t border-white/10 pt-6 text-[13px] text-night-muted">
           <li>
             <span className="block text-xl font-bold text-white">24/7</span>
             online booking

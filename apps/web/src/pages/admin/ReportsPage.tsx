@@ -268,7 +268,7 @@ export default function ReportsPage() {
                         <p className="font-semibold">{s.name}</p>
                         <div className="mt-1.5 h-1 rounded-full bg-subtle">
                           <div
-                            className="h-full rounded-full bg-sage"
+                            className="h-full rounded-full bg-success"
                             style={{
                               width: `${(s.appointments / report.services[0].appointments) * 100}%`,
                             }}
@@ -303,7 +303,7 @@ export default function ReportsPage() {
                         <div className="mt-2 flex items-center gap-3">
                           <div className="h-1.5 flex-1 rounded-full bg-subtle">
                             <div
-                              className="h-full rounded-full bg-moss"
+                              className="h-full rounded-full bg-accent"
                               style={{ width: `${Math.round((o.rate ?? 0) * 100)}%` }}
                             />
                           </div>

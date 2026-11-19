@@ -63,14 +63,14 @@ export function AppointmentDetail({
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted">
                 <a
                   href={`tel:${a.client.phone}`}
-                  className="inline-flex items-center gap-1.5 hover:text-forest"
+                  className="inline-flex items-center gap-1.5 hover:text-accent-ink"
                 >
                   <Phone className="size-3.5" aria-hidden /> {a.client.phone}
                 </a>
                 {a.client.email && (
                   <a
                     href={`mailto:${a.client.email}`}
-                    className="inline-flex items-center gap-1.5 hover:text-forest"
+                    className="inline-flex items-center gap-1.5 hover:text-accent-ink"
                   >
                     <Mail className="size-3.5" aria-hidden /> {a.client.email}
                   </a>
@@ -127,14 +127,14 @@ export function AppointmentDetail({
                     className={clsx(
                       'flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed',
                       active
-                        ? 'border-forest bg-forest-50'
+                        ? 'border-accent bg-accent-50'
                         : 'border-line hover:border-line-strong hover:bg-subtle disabled:opacity-60',
                     )}
                   >
                     <Icon
                       className={clsx(
                         'size-4 shrink-0',
-                        active ? 'text-forest' : 'text-muted',
+                        active ? 'text-accent-ink' : 'text-muted',
                         pending && 'animate-pulse',
                       )}
                       aria-hidden

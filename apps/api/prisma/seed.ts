@@ -94,7 +94,7 @@ const STAFF: StaffSeed[] = [
   {
     name: 'Martín Acosta',
     title: 'Senior Barber',
-    color: '#2f6b55',
+    color: '#526ff5',
     services: ['cut', 'beard', 'combo', 'kids', 'shave'],
     hours: {
       ...weekdays(
@@ -110,14 +110,14 @@ const STAFF: StaffSeed[] = [
   {
     name: 'Lucía Benítez',
     title: 'Stylist & Colorist',
-    color: '#b07a4f',
+    color: '#c47a1c',
     services: ['cut', 'kids', 'color'],
     hours: weekdays([2, 3, 4, 5, 6], [[h(10), h(18)]]),
   },
   {
     name: 'Diego Ramírez',
     title: 'Barber',
-    color: '#5b7c99',
+    color: '#1f8a62',
     services: ['cut', 'beard', 'combo', 'shave'],
     hours: { ...weekdays([1, 2, 3, 4, 5], [[h(15), h(21)]]), 6: [[h(9), h(14)]] },
   },

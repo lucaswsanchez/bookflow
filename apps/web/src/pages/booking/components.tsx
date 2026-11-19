@@ -35,7 +35,7 @@ export function StepIndicator({ current }: { current: number }) {
             aria-current={i === current ? 'step' : undefined}
             className={clsx(
               'h-1 rounded-full transition-colors duration-300',
-              i <= current ? 'bg-forest' : 'bg-line',
+              i <= current ? 'bg-accent' : 'bg-line',
             )}
           >
             <span className="sr-only">
@@ -63,11 +63,11 @@ function OptionRow({
       type="button"
       onClick={onClick}
       data-testid={testId}
-      className="group flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-forest-50/50 focus-visible:bg-forest-50/50 sm:px-5"
+      className="group flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-accent-50/50 focus-visible:bg-accent-50/50 sm:px-5"
     >
       {children}
       <ChevronRight
-        className="size-4 shrink-0 text-faint transition-transform group-hover:translate-x-0.5 group-hover:text-forest"
+        className="size-4 shrink-0 text-faint transition-transform group-hover:translate-x-0.5 group-hover:text-accent-ink"
         aria-hidden
       />
     </button>
@@ -98,7 +98,7 @@ export function ServiceList({
         <li key={s.id}>
           <OptionRow onClick={() => onSelect(s)} testId={`service-option-${slugify(s.name)}`}>
             <span className="min-w-0 flex-1">
-              <span className="block font-bold text-ink group-hover:text-forest">{s.name}</span>
+              <span className="block font-bold text-ink group-hover:text-accent-ink">{s.name}</span>
               {s.description && (
                 <span className="mt-0.5 block text-[13px] leading-snug text-muted">
                   {s.description}
@@ -142,7 +142,7 @@ export function StaffList({
           <OptionRow onClick={() => onSelect(s)} testId={`staff-option-${slugify(s.name)}`}>
             <Avatar name={s.name} color={s.color} size="lg" />
             <span className="min-w-0 flex-1">
-              <span className="block font-bold text-ink group-hover:text-forest">{s.name}</span>
+              <span className="block font-bold text-ink group-hover:text-accent-ink">{s.name}</span>
               {s.title && <span className="block text-[13px] text-muted">{s.title}</span>}
             </span>
           </OptionRow>
@@ -181,19 +181,22 @@ export function DayPicker({
             className={clsx(
               'flex w-[60px] shrink-0 snap-start flex-col items-center rounded-lg border py-2.5 transition-colors',
               active
-                ? 'border-forest bg-forest text-white'
-                : 'border-line bg-surface text-ink hover:border-moss',
+                ? 'border-accent bg-accent text-white'
+                : 'border-line bg-surface text-ink hover:border-accent',
             )}
           >
             <span
-              className={clsx('text-[11px] font-semibold', active ? 'text-sage' : 'text-muted')}
+              className={clsx(
+                'text-[11px] font-semibold',
+                active ? 'text-night-muted' : 'text-muted',
+              )}
             >
               {i === 0
                 ? 'Today'
                 : formatDay(d, { weekday: 'short', month: undefined, day: undefined })}
             </span>
             <span className="tabular text-xl leading-tight font-bold">{Number(d.slice(8))}</span>
-            <span className={clsx('text-[11px]', active ? 'text-sage' : 'text-muted')}>
+            <span className={clsx('text-[11px]', active ? 'text-night-muted' : 'text-muted')}>
               {formatDay(d, { weekday: undefined, month: 'short', day: undefined })}
             </span>
           </button>
@@ -271,8 +274,8 @@ export function SlotPicker({
                     className={clsx(
                       'tabular h-11 w-full rounded-md border text-sm font-semibold transition-colors',
                       selected === slot.start
-                        ? 'border-forest bg-forest text-white'
-                        : 'border-line bg-surface text-ink hover:border-forest hover:bg-forest-50 hover:text-forest',
+                        ? 'border-accent bg-accent text-white'
+                        : 'border-line bg-surface text-ink hover:border-accent hover:bg-accent-50 hover:text-accent-ink',
                     )}
                   >
                     {slot.time}

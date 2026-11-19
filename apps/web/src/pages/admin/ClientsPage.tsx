@@ -183,7 +183,7 @@ export default function ClientsPage() {
                   >
                     <Td>
                       <span className="flex items-center gap-3">
-                        <Avatar name={c.name} color="#a4b99c" size="sm" />
+                        <Avatar name={c.name} color="#5b6474" size="sm" />
                         <span className="font-semibold">{c.name}</span>
                       </span>
                     </Td>
@@ -204,7 +204,7 @@ export default function ClientsPage() {
                   onClick={() => setViewing(c)}
                   className="flex cursor-pointer items-center gap-3 py-3 pr-2 pl-4"
                 >
-                  <Avatar name={c.name} color="#a4b99c" />
+                  <Avatar name={c.name} color="#5b6474" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{c.name}</p>
                     <p className="tabular truncate text-[13px] text-muted">
@@ -284,14 +284,14 @@ function ClientProfile({ clientId, onEdit }: { clientId: string; onEdit: () => v
         <div className="space-y-1 text-sm">
           <a
             href={`tel:${c.phone}`}
-            className="flex items-center gap-2 text-ink-soft hover:text-forest"
+            className="flex items-center gap-2 text-ink-soft hover:text-accent-ink"
           >
             <Phone className="size-4 text-faint" aria-hidden /> {c.phone}
           </a>
           {c.email && (
             <a
               href={`mailto:${c.email}`}
-              className="flex items-center gap-2 text-ink-soft hover:text-forest"
+              className="flex items-center gap-2 text-ink-soft hover:text-accent-ink"
             >
               <Mail className="size-4 text-faint" aria-hidden /> {c.email}
             </a>
@@ -321,8 +321,8 @@ function ClientProfile({ clientId, onEdit }: { clientId: string; onEdit: () => v
       </dl>
 
       {c.notes && (
-        <div className="rounded-md bg-sand-50 px-4 py-3 text-sm text-ink-soft">
-          <p className="eyebrow mb-1 text-sand-700">Notes</p>
+        <div className="rounded-md bg-signal-50 px-4 py-3 text-sm text-ink-soft">
+          <p className="eyebrow mb-1 text-signal-700">Notes</p>
           {c.notes}
         </div>
       )}
@@ -424,7 +424,7 @@ function ClientForm({ client, onDone }: { client: Client | null; onDone: () => v
           {save.error.message}
         </p>
       )}
-      <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-[#fbfaf7] px-5 py-3">
+      <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-canvas px-5 py-3">
         <Button type="button" variant="secondary" onClick={onDone}>
           Cancel
         </Button>
