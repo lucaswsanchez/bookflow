@@ -4,13 +4,14 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import { RequireAuth } from './auth/RequireAuth';
 import { ApiError } from './lib/api';
-import BookingPage from './pages/booking/BookingPage';
 import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
 import { Spinner, Toaster } from './components/ui';
 
 // The admin panel is loaded on demand so the public booking page stays light on phones.
 // Reports also get their own chunk because of Recharts.
+// Booking and login carry the form libraries; keep them out of the landing bundle.
+const BookingPage = lazy(() => import('./pages/booking/BookingPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'));
 const AgendaPage = lazy(() => import('./pages/admin/AgendaPage'));
@@ -33,6 +34,14 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function PageLoading() {
+  return (
+    <div className="grid min-h-screen place-items-center">
+      <Spinner />
+    </div>
+  );
+}
 
 function NotFound() {
   return (
@@ -59,8 +68,22 @@ export default function App() {
         <AuthProvider>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/book/:slug" element={<BookingPage />} />
-            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/book/:slug"
+              element={
+                <Suspense fallback={<PageLoading />}>
+                  <BookingPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/login"
+              element={
+                <Suspense fallback={<PageLoading />}>
+                  <LoginPage />
+                </Suspense>
+              }
+            />
             <Route
               path="/app"
               element={
