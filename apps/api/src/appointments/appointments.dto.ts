@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AppointmentStatus } from '@prisma/client';
-import { IsEnum, IsOptional, IsString, Matches } from 'class-validator';
+import { IsEnum, IsISO8601, IsOptional, IsString, Matches } from 'class-validator';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -8,11 +8,13 @@ export class AppointmentsQueryDto {
   @ApiPropertyOptional({ example: '2026-12-01', description: 'First local date (inclusive)' })
   @IsOptional()
   @Matches(DATE, { message: 'from must be formatted YYYY-MM-DD' })
+  @IsISO8601({ strict: true }, { message: 'from must be a valid YYYY-MM-DD date' })
   from?: string;
 
   @ApiPropertyOptional({ example: '2026-12-07', description: 'Last local date (inclusive)' })
   @IsOptional()
   @Matches(DATE, { message: 'to must be formatted YYYY-MM-DD' })
+  @IsISO8601({ strict: true }, { message: 'to must be a valid YYYY-MM-DD date' })
   to?: string;
 
   @ApiPropertyOptional({ description: 'Ignored for STAFF users (always their own agenda)' })

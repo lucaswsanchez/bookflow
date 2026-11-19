@@ -84,6 +84,20 @@ describe('Appointments & dashboard (e2e)', () => {
       .expect(400);
   });
 
+  it.each(['/appointments', '/appointments/export'])(
+    'rejects impossible calendar dates on %s',
+    async (path) => {
+      for (const from of ['2026-02-30', '2026-13-45']) {
+        const res = await request(app.getHttpServer())
+          .get(path)
+          .query({ from })
+          .set('Authorization', `Bearer ${adminToken}`)
+          .expect(400);
+        expect(res.text).toContain('from must be a valid YYYY-MM-DD date');
+      }
+    },
+  );
+
   it('exports appointments as CSV', async () => {
     const res = await request(app.getHttpServer())
       .get('/appointments/export')
