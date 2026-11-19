@@ -36,16 +36,22 @@ export function StepIndicator({ current }: { current: number }) {
               className={clsx(
                 'mt-2 flex items-baseline gap-1.5 truncate text-[12px]',
                 i === current ? 'font-medium text-ink' : 'text-muted',
-                i !== current && 'max-sm:sr-only',
+                'max-sm:sr-only',
               )}
             >
-              <span className="tabular text-[11px] text-faint">0{i + 1}</span>
+              <span className="mono text-[11px] text-faint">0{i + 1}</span>
               {label}
               {i < current && <span className="sr-only"> (done)</span>}
             </span>
           </li>
         ))}
       </ol>
+      <p className="mt-2 flex items-baseline justify-between text-[12px] sm:hidden" aria-hidden>
+        <span className="font-medium text-ink">{STEPS[current]}</span>
+        <span className="mono text-muted">
+          {current + 1}/{STEPS.length}
+        </span>
+      </p>
     </div>
   );
 }
@@ -67,7 +73,7 @@ function OptionRow({
       className="group flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-canvas focus-visible:bg-canvas sm:px-5"
     >
       {children}
-      <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line text-faint transition-colors group-hover:border-accent group-hover:bg-accent group-hover:text-white">
+      <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line text-faint transition-colors group-hover:border-accent group-hover:bg-accent-strong group-hover:text-white">
         <ChevronRight className="size-3.5" aria-hidden />
       </span>
     </button>
@@ -274,9 +280,9 @@ export function SlotPicker({
                     aria-pressed={selected === slot.start}
                     data-testid={`slot-option-${slot.time.replace(':', '-')}`}
                     className={clsx(
-                      'tabular h-11 w-full rounded-md border text-[14px] font-medium transition-colors',
+                      'mono h-11 w-full rounded-md border text-[14px] font-medium transition-colors',
                       selected === slot.start
-                        ? 'border-accent bg-accent text-white'
+                        ? 'border-accent bg-accent-strong text-white'
                         : 'border-line bg-surface text-ink hover:border-accent hover:bg-accent-50 hover:text-accent-ink',
                     )}
                   >

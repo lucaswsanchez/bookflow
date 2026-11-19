@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Clock, Pencil, Plus, Scissors, Trash2 } from 'lucide-react';
@@ -27,6 +28,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { api } from '../../lib/api';
 import { formatDuration, formatPrice, slugify } from '../../lib/format';
 import type { Service, StaffMember } from '../../lib/types';
+import { toast } from '../../lib/toast';
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(80),
@@ -51,6 +53,7 @@ export default function ServicesPage() {
     mutationFn: (id: string) => api<{ deleted: boolean }>(`/services/${id}`, { method: 'DELETE' }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['services'] });
+      toast('Service deleted');
       setDeleting(null);
     },
   });
@@ -60,8 +63,14 @@ export default function ServicesPage() {
   const activeCount = services.data?.filter((s) => s.active).length ?? 0;
   const desktop = useMediaQuery('(min-width: 768px)');
 
-  const actions = (s: Service) => (
-    <div className="flex justify-end gap-0.5">
+  const actions = (s: Service, reveal = false) => (
+    <div
+      className={clsx(
+        'flex justify-end gap-0.5',
+        reveal &&
+          'transition-opacity [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-within:opacity-100',
+      )}
+    >
       <IconButton
         label={`Edit ${s.name}`}
         size="sm"
@@ -143,7 +152,7 @@ export default function ServicesPage() {
                       <tr
                         key={s.id}
                         data-testid={`service-row-${slugify(s.name)}`}
-                        className={s.active ? undefined : 'text-muted'}
+                        className={clsx('group', !s.active && 'text-muted')}
                       >
                         <Td className="max-w-sm">
                           <p className="font-semibold text-ink">{s.name}</p>
@@ -170,9 +179,13 @@ export default function ServicesPage() {
                           )}
                         </Td>
                         <Td>
-                          {s.active ? <Badge tone="accent">Bookable</Badge> : <Badge>Hidden</Badge>}
+                          {s.active ? (
+                            <span className="text-[13px] text-muted">Online</span>
+                          ) : (
+                            <Badge>Hidden</Badge>
+                          )}
                         </Td>
-                        <Td>{actions(s)}</Td>
+                        <Td>{actions(s, true)}</Td>
                       </tr>
                     );
                   })}
@@ -207,7 +220,7 @@ export default function ServicesPage() {
                         {formatDuration(s.durationMinutes)}
                       </span>
                       {people.length > 0 && <AvatarStack people={people} />}
-                      {s.active ? <Badge tone="accent">Bookable</Badge> : <Badge>Hidden</Badge>}
+                      {!s.active && <Badge>Hidden</Badge>}
                       <span className="ml-auto">{actions(s)}</span>
                     </div>
                   </li>
@@ -269,6 +282,7 @@ function ServiceForm({ service, onDone }: { service: Service | null; onDone: () 
         : api('/services', { method: 'POST', body: values }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['services'] });
+      toast('Service saved');
       onDone();
     },
   });

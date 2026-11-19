@@ -21,6 +21,7 @@ import {
 import { api } from '../../lib/api';
 import { minutesToTime, slugify, timeToMinutes, WEEKDAYS } from '../../lib/format';
 import type { Service, StaffMember, WorkingHours } from '../../lib/types';
+import { toast } from '../../lib/toast';
 
 // Monday-first order for display
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -46,6 +47,7 @@ export default function StaffPage() {
     mutationFn: (id: string) => api(`/staff/${id}`, { method: 'DELETE' }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['staff'] });
+      toast('Staff member removed');
       setDeleting(null);
     },
   });
@@ -128,7 +130,7 @@ export default function StaffPage() {
                         <p
                           className={clsx(
                             'text-[11px] font-semibold',
-                            ranges.length ? 'text-accent-ink' : 'text-faint',
+                            ranges.length ? 'text-ink' : 'text-faint',
                           )}
                         >
                           {WEEKDAYS[d].slice(0, 3)}
@@ -137,7 +139,7 @@ export default function StaffPage() {
                           ranges.map((h, i) => (
                             <p
                               key={i}
-                              className="tabular mt-1 text-[11px] leading-tight text-ink-soft"
+                              className="mono mt-1 text-[11px] leading-tight text-ink-soft"
                             >
                               {short(h.startMinute)}–{short(h.endMinute)}
                             </p>
@@ -260,6 +262,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['staff'] });
+      toast('Staff member saved');
       onDone();
     },
     onError: (e) => setError(e.message),
@@ -375,7 +378,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
                       value={r.start}
                       step={900}
                       onChange={(e) => update(i, { start: e.target.value })}
-                      className="tabular no-picker-icon w-[46px] rounded-sm bg-transparent text-[13px] focus:outline-none"
+                      className="mono no-picker-icon w-[46px] rounded-sm bg-transparent text-[13px] focus:outline-none"
                     />
                     <span className="text-faint">–</span>
                     <input
@@ -384,7 +387,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
                       value={r.end}
                       step={900}
                       onChange={(e) => update(i, { end: e.target.value })}
-                      className="tabular no-picker-icon w-[46px] rounded-sm bg-transparent text-[13px] focus:outline-none"
+                      className="mono no-picker-icon w-[46px] rounded-sm bg-transparent text-[13px] focus:outline-none"
                     />
                     <IconButton
                       label="Remove range"

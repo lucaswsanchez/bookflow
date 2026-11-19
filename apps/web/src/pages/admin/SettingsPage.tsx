@@ -11,7 +11,7 @@ function Row({ label, children, mono }: { label: string; children: ReactNode; mo
   return (
     <div className="grid gap-1 border-b border-line px-5 py-3.5 last:border-b-0 sm:grid-cols-[200px_1fr] sm:gap-6">
       <dt className="text-[13px] text-muted">{label}</dt>
-      <dd className={mono ? 'tabular text-[13px] text-ink' : 'text-sm text-ink'}>{children}</dd>
+      <dd className={mono ? 'mono text-[13px] text-ink' : 'text-sm text-ink'}>{children}</dd>
     </div>
   );
 }
@@ -64,9 +64,7 @@ export default function SettingsPage() {
                     <Row label="City">{place ?? '—'}</Row>
                     <Row label="Description">{b.description ?? '—'}</Row>
                     <Row label="Address">{b.address ?? '—'}</Row>
-                    <Row label="Phone" mono>
-                      {b.phone ?? '—'}
-                    </Row>
+                    <Row label="Phone">{b.phone ?? '—'}</Row>
                   </>
                 ) : (
                   <div className="space-y-3 p-5">
@@ -112,7 +110,7 @@ export default function SettingsPage() {
               </div>
               <div className="px-4 py-3.5">
                 <p
-                  className="tabular truncate rounded-md bg-night-2 px-2.5 py-2 text-[12px] text-white"
+                  className="mono truncate rounded-md bg-night-2 px-2.5 py-2 text-[12px] text-white"
                   data-testid="booking-link"
                   title={link}
                 >

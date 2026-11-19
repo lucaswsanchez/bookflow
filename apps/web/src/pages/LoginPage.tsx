@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '../auth/useAuth';
+import { Loader2 } from 'lucide-react';
 import { Button, Field, Input, Logo } from '../components/ui';
 import { ApiError } from '../lib/api';
 
@@ -123,7 +124,36 @@ export default function LoginPage() {
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? '/app';
 
+  // One-click demo from the landing page: /login?demo=admin or /login?demo=staff
+  const [params] = useSearchParams();
+  const demo = params.get('demo') as keyof typeof DEMO | null;
+  const started = useRef(false);
+  const [demoError, setDemoError] = useState<string | null>(null);
+  useEffect(() => {
+    if (status !== 'anonymous' || !demo || !(demo in DEMO) || started.current) return;
+    started.current = true;
+    login(DEMO[demo].email, DEMO[demo].password)
+      .then(() => navigate('/app', { replace: true }))
+      .catch((e: unknown) => setDemoError(e instanceof Error ? e.message : 'Login failed'));
+  }, [status, demo, login, navigate]);
+
   if (status === 'authenticated') return <Navigate to={from} replace />;
+  if (demo && demo in DEMO && !demoError) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-night px-4 text-center text-night-text">
+        <div data-testid="demo-signing-in">
+          <Logo inverted className="justify-center" />
+          <p className="mt-6 flex items-center justify-center gap-2 text-sm">
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+            Opening the {demo} demo…
+          </p>
+          <p className="mt-2 max-w-xs text-xs text-night-muted">
+            The demo API runs on a free tier: the first request may take up to a minute.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
@@ -166,6 +196,14 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p className="mt-1 mb-8 text-sm text-muted">Log in to manage your agenda.</p>
+          {demoError && (
+            <p
+              role="alert"
+              className="mb-5 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger"
+            >
+              {demoError}
+            </p>
+          )}
           <LoginForm
             onSubmit={async ({ email, password }) => {
               await login(email, password);

@@ -7,6 +7,7 @@ import { formatDay, formatDuration, formatPrice, formatTime, toLocalDate } from 
 import { STATUS_LABELS } from '../lib/status';
 import type { Appointment, AppointmentStatus } from '../lib/types';
 import { Avatar, Modal, StatusBadge } from './ui';
+import { toast } from '../lib/toast';
 
 const ACTIONS: { status: AppointmentStatus; icon: typeof CheckCircle2; hint: string }[] = [
   { status: 'COMPLETED', icon: CheckCircle2, hint: 'The client attended' },
@@ -37,6 +38,7 @@ export function AppointmentDetail({
       api<Appointment>(`/appointments/${id}/status`, { method: 'PATCH', body: { status } }),
     onSuccess: (updated) => {
       setCurrent(updated);
+      toast(`Marked as ${STATUS_LABELS[updated.status].toLowerCase()}`);
       void queryClient.invalidateQueries({ queryKey: ['appointments'] });
       void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       void queryClient.invalidateQueries({ queryKey: ['client'] });
@@ -84,7 +86,7 @@ export function AppointmentDetail({
             <dt className="text-muted">When</dt>
             <dd className="font-semibold">
               {formatDay(toLocalDate(new Date(a.startsAt), timeZone), { month: 'long' })}
-              <span className="tabular ml-2 font-normal text-ink-soft">
+              <span className="mono ml-2 font-normal text-ink-soft">
                 {formatTime(a.startsAt, timeZone)} – {formatTime(a.endsAt, timeZone)}
               </span>
             </dd>

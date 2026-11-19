@@ -7,7 +7,7 @@ import { ApiError } from './lib/api';
 import BookingPage from './pages/booking/BookingPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-import { Spinner } from './components/ui';
+import { Spinner, Toaster } from './components/ui';
 
 // The admin panel is loaded on demand so the public booking page stays light on phones.
 // Reports also get their own chunk because of Recharts.
@@ -124,6 +124,7 @@ export default function App() {
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Toaster />
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
