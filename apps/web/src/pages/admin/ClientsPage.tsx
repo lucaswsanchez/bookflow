@@ -29,14 +29,12 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { api } from '../../lib/api';
 import { DEFAULT_TZ, formatDay, formatPrice, formatTime, toLocalDate } from '../../lib/format';
 import type { AppointmentStatus, Client } from '../../lib/types';
+import { PHONE_REGEX } from '../booking/schema';
 import { toast } from '../../lib/toast';
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(80),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^\+?[0-9 ()-]{6,20}$/, 'Enter a valid phone number'),
+  phone: z.string().trim().regex(PHONE_REGEX, 'Enter a valid phone number'),
   email: z.union([z.literal(''), z.string().trim().email('Enter a valid email')]),
   notes: z.string().max(500, 'At most 500 characters').optional(),
 });

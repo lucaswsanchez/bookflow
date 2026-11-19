@@ -74,6 +74,18 @@ describe('ClientDetailsForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it('rejects a phone number without digits', async () => {
+    const onSubmit = vi.fn();
+    render(<ClientDetailsForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText('Full name'), 'Juan Pérez');
+    await userEvent.type(screen.getByLabelText('Phone'), '------');
+    await userEvent.click(screen.getByTestId('submit-booking'));
+
+    expect(await screen.findByText('Please enter a valid phone number')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('submits trimmed values when the form is valid', async () => {
     const onSubmit = vi.fn();
     render(<ClientDetailsForm onSubmit={onSubmit} />);

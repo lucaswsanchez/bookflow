@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { createParamDecorator, ExecutionContext, SetMetadata } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import type { AuthUser } from '../../auth/auth.types';
@@ -14,3 +15,7 @@ export const Roles = (...roles: Role[]) => SetMetadata(ROLES_KEY, roles);
 export const CurrentUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): AuthUser => ctx.switchToHttp().getRequest().user,
 );
+
+/** Trims string input before validation, so whitespace-only values fail length checks. */
+export const Trim = () =>
+  Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value));
