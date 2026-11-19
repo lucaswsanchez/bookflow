@@ -158,7 +158,7 @@ export function Stat({
         data-testid={testId}
         className={clsx(
           'tabular mt-2 truncate leading-none font-medium',
-          size === 'lg' ? 'text-[34px]' : 'text-[22px]',
+          size === 'lg' ? 'text-[34px]' : 'text-[20px]',
           tone === 'accent' ? 'text-accent-ink' : 'text-ink',
         )}
       >

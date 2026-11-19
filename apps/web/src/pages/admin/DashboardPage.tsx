@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { ArrowRight, CalendarDays } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ArrowRight, ArrowUpRight, CalendarDays } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
 import { AppointmentDetail } from '../../components/AppointmentDetail';
@@ -17,7 +17,15 @@ import {
   StatusBadge,
 } from '../../components/ui';
 import { api } from '../../lib/api';
-import { DEFAULT_TZ, formatDay, formatPrice, formatTime, toLocalDate } from '../../lib/format';
+import {
+  DEFAULT_TZ,
+  formatDay,
+  formatPrice,
+  formatTime,
+  minutesOfDay,
+  minutesToTime,
+  toLocalDate,
+} from '../../lib/format';
 import {
   countByStatus,
   formatPercent,
@@ -36,12 +44,25 @@ import type {
 const greeting = (hour: number) =>
   hour < 12 ? 'Good morning' : hour < 20 ? 'Good afternoon' : 'Good evening';
 
+const weekdayOf = (date: string) => new Date(`${date}T12:00:00Z`).getUTCDay();
+
+/** Re-render every minute so "now" and "in 25 min" stay current. */
+function useNow() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+  return now;
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const tz = user?.business.timezone ?? DEFAULT_TZ;
   const isStaff = user?.role === 'STAFF';
   const [selected, setSelected] = useState<Appointment | null>(null);
   const navigate = useNavigate();
+  const now = useNow();
 
   const summary = useQuery({
     queryKey: ['dashboard'],
@@ -56,25 +77,34 @@ export default function DashboardPage() {
   });
   const staff = useQuery({ queryKey: ['staff'], queryFn: () => api<StaffMember[]>('/staff') });
 
-  const today = toLocalDate(new Date(), tz);
-  const hour = Number(
-    new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: tz }).format(
-      new Date(),
-    ),
-  );
+  const today = toLocalDate(now, tz);
+  const nowMinute = minutesOfDay(now.toISOString(), tz);
+  const hour = Math.floor(nowMinute / 60);
 
   const insights = useMemo(() => {
     if (!week || !weekAppointments.data || !staff.data) return null;
-    const people = isStaff ? staff.data.filter((s) => s.id === user?.staffId) : staff.data;
-    const occupancy = occupancyByStaff(people, weekAppointments.data, week.from, week.to);
+    const people = (isStaff ? staff.data.filter((s) => s.id === user?.staffId) : staff.data).filter(
+      (s) => s.active !== false,
+    );
+    const all = weekAppointments.data;
+    const todays = all.filter((a) => toLocalDate(new Date(a.startsAt), tz) === today);
+    const occupancy = occupancyByStaff(people, all, week.from, week.to);
+    const todayOccupancy = occupancyByStaff(people, todays, today, today);
     return {
-      days: totalsByDay(weekAppointments.data, week.from, week.to, tz),
+      people,
+      todays,
+      days: totalsByDay(all, week.from, week.to, tz),
       occupancy,
       total: totalOccupancy(occupancy),
+      today: totalOccupancy(todayOccupancy),
+      toAttend: todays.filter(
+        (a) => a.status === 'CONFIRMED' && new Date(a.startsAt).getTime() > now.getTime(),
+      ).length,
     };
-  }, [week, weekAppointments.data, staff.data, isStaff, user?.staffId, tz]);
+  }, [week, weekAppointments.data, staff.data, isStaff, user?.staffId, tz, today, now]);
 
   const firstName = user?.name.split(' ')[0];
+  const s = summary.data;
 
   return (
     <>
@@ -84,155 +114,200 @@ export default function DashboardPage() {
         description={
           isStaff
             ? 'Your day and week at a glance.'
-            : `Here is how ${user?.business.name} is doing.`
+            : `Operations for ${user?.business.name.split(/\s+[—–-]\s+/)[0]}.`
         }
         actions={
-          <Button variant="secondary" onClick={() => navigate('/app/agenda')}>
-            <CalendarDays className="size-4" aria-hidden /> Open agenda
-          </Button>
+          <>
+            {!isStaff && (
+              <a
+                href={`/book/${user?.business.slug}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-ink-soft hover:bg-subtle hover:text-ink"
+              >
+                Booking page <ArrowUpRight className="size-3.5" aria-hidden />
+              </a>
+            )}
+            <Button variant="secondary" onClick={() => navigate('/app/agenda')}>
+              <CalendarDays className="size-4" aria-hidden /> Open agenda
+            </Button>
+          </>
         }
       />
 
       {summary.isError ? (
         <ErrorState message={summary.error.message} onRetry={() => summary.refetch()} />
       ) : (
-        <div className="space-y-10">
-          {/* KPI band */}
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line lg:grid-cols-4">
-            {summary.data ? (
-              <>
-                <Kpi>
-                  <Stat
-                    tone="accent"
-                    label="Revenue today"
-                    value={formatPrice(summary.data.today.estimatedRevenue)}
-                    hint="Confirmed and completed"
-                    testId="stat-today-revenue"
-                  />
-                </Kpi>
-                <Kpi>
-                  <Stat
-                    label="Booked today"
-                    value={summary.data.today.appointments}
-                    hint={`${summary.data.today.byStatus.COMPLETED ?? 0} completed · ${
-                      summary.data.today.byStatus.CONFIRMED ?? 0
-                    } to go`}
-                    testId="stat-today-appointments"
-                  />
-                </Kpi>
-                <Kpi>
-                  <Stat
-                    label="Revenue this week"
-                    value={formatPrice(summary.data.week.estimatedRevenue)}
-                    hint={`${formatDay(summary.data.week.from, { weekday: undefined })} – ${formatDay(
-                      summary.data.week.to,
-                      { weekday: undefined },
-                    )}`}
-                    testId="stat-week-revenue"
-                  />
-                </Kpi>
-                <Kpi>
-                  <Stat
-                    label="Booked this week"
-                    value={summary.data.week.appointments}
-                    hint={insights ? `${formatPercent(insights.total)} occupancy` : 'Calculating…'}
-                    testId="stat-week-appointments"
-                  />
-                </Kpi>
-              </>
-            ) : (
-              Array.from({ length: 4 }, (_, i) => (
-                <Kpi key={i}>
-                  <Skeleton className="h-3 w-24" />
-                  <Skeleton className="mt-3 h-7 w-28" />
-                  <Skeleton className="mt-3 h-3 w-20" />
-                </Kpi>
-              ))
-            )}
+        <div className="space-y-8">
+          {/* KPIs with hierarchy: today's revenue leads, the rest support it. */}
+          <div className="grid overflow-hidden rounded-lg border border-line bg-surface shadow-soft lg:grid-cols-[minmax(0,1.25fr)_minmax(0,2fr)]">
+            <div className="bg-night px-5 py-5 text-night-text sm:px-6">
+              {s ? (
+                <>
+                  <p className="eyebrow text-night-muted">Revenue today</p>
+                  <p
+                    className="tabular mt-2.5 text-[36px] leading-none font-medium text-white"
+                    data-testid="stat-today-revenue"
+                  >
+                    {formatPrice(s.today.estimatedRevenue)}
+                  </p>
+                  <p className="mt-3 text-[13px] text-night-muted">
+                    Confirmed and completed ·{' '}
+                    <span className="text-night-text">{s.today.byStatus.COMPLETED ?? 0} done</span>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Skeleton className="h-3 w-24 bg-night-3" />
+                  <Skeleton className="mt-3 h-9 w-40 bg-night-3" />
+                </>
+              )}
+            </div>
+            <div className="grid grid-cols-2 divide-line sm:grid-cols-4 sm:divide-x [&>*]:border-line max-sm:[&>*:nth-child(-n+2)]:border-b max-sm:[&>*:nth-child(odd)]:border-r">
+              {s ? (
+                <>
+                  <Kpi>
+                    <Stat
+                      label="Booked today"
+                      value={s.today.appointments}
+                      hint={`${s.today.byStatus.CONFIRMED ?? 0} confirmed`}
+                      testId="stat-today-appointments"
+                    />
+                  </Kpi>
+                  <Kpi>
+                    <Stat
+                      label="Still to attend"
+                      value={insights ? insights.toAttend : '—'}
+                      hint={nowMinute ? `after ${minutesToTime(nowMinute)}` : undefined}
+                      testId="stat-to-attend"
+                    />
+                  </Kpi>
+                  <Kpi>
+                    <Stat
+                      label="Occupancy today"
+                      value={insights ? formatPercent(insights.today) : '—'}
+                      hint={insights ? `${formatPercent(insights.total)} this week` : undefined}
+                      testId="stat-today-occupancy"
+                    />
+                  </Kpi>
+                  <Kpi>
+                    <Stat
+                      label="This week"
+                      value={formatPrice(s.week.estimatedRevenue)}
+                      hint={<span data-testid="stat-week-appointments">{s.week.appointments}</span>}
+                      testId="stat-week-revenue"
+                    />
+                  </Kpi>
+                </>
+              ) : (
+                Array.from({ length: 4 }, (_, i) => (
+                  <Kpi key={i}>
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="mt-3 h-6 w-16" />
+                  </Kpi>
+                ))
+              )}
+            </div>
           </div>
 
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-            <div className="space-y-10">
-              <Section
-                title="Next appointments"
-                description="Confirmed bookings coming up"
-                action={
-                  <Link
-                    to="/app/agenda"
-                    className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent-ink hover:underline"
-                  >
-                    Agenda <ArrowRight className="size-3.5" aria-hidden />
-                  </Link>
-                }
-              >
-                {!summary.data ? (
-                  <ListSkeleton />
-                ) : summary.data.upcoming.length === 0 ? (
-                  <EmptyState
-                    title="No upcoming appointments"
-                    description="New bookings will show up here."
-                  />
-                ) : (
-                  <ul className="divide-y divide-line" data-testid="upcoming-list">
-                    {summary.data.upcoming.map((a) => (
-                      <li key={a.id} data-testid="upcoming-item">
+          {/* Today's schedule + next up */}
+          <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <Section
+              title="Today’s schedule"
+              description={
+                insights
+                  ? `${insights.todays.filter((a) => a.status !== 'CANCELLED').length} appointments across ${insights.people.length} ${insights.people.length === 1 ? 'professional' : 'professionals'}`
+                  : undefined
+              }
+              action={
+                <Link
+                  to="/app/agenda"
+                  className="inline-flex items-center gap-1 text-[13px] font-medium text-accent-ink hover:underline"
+                >
+                  Full agenda <ArrowRight className="size-3.5" aria-hidden />
+                </Link>
+              }
+              testId="today-schedule"
+            >
+              {insights ? (
+                <DayTimeline
+                  people={insights.people}
+                  appointments={insights.todays}
+                  date={today}
+                  nowMinute={nowMinute}
+                  tz={tz}
+                  onSelect={setSelected}
+                />
+              ) : (
+                <Skeleton className="h-56 w-full" />
+              )}
+            </Section>
+
+            <Section title="Up next" description="Confirmed bookings coming up">
+              {!s ? (
+                <ListSkeleton />
+              ) : s.upcoming.length === 0 ? (
+                <EmptyState
+                  title="No upcoming appointments"
+                  description="New bookings will show up here."
+                />
+              ) : (
+                <ul
+                  className="overflow-hidden rounded-lg border border-line bg-surface shadow-soft"
+                  data-testid="upcoming-list"
+                >
+                  {s.upcoming.map((a, i) => (
+                    <li
+                      key={a.id}
+                      data-testid="upcoming-item"
+                      className="border-b border-line last:border-b-0"
+                    >
+                      {i === 0 ? (
+                        <NextUp
+                          a={a}
+                          tz={tz}
+                          today={today}
+                          now={now}
+                          onClick={() => setSelected(a)}
+                        />
+                      ) : (
                         <button
                           type="button"
                           onClick={() => setSelected(a)}
-                          className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-4 rounded-md px-2 py-3 text-left transition-colors hover:bg-surface"
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-canvas"
                         >
-                          <div className="w-16 shrink-0">
-                            <p className="tabular text-[15px] font-bold">
+                          <div className="w-14 shrink-0">
+                            <p className="tabular text-[13px] font-medium">
                               {formatTime(a.startsAt, tz)}
                             </p>
-                            <p className="text-xs text-muted">
+                            <p className="text-[11px] text-muted">
                               {relativeDay(toLocalDate(new Date(a.startsAt), tz), today)}
                             </p>
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-semibold">{a.client.name}</p>
-                            <p className="truncate text-[13px] text-muted">{a.service.name}</p>
+                            <p className="truncate text-[13px] font-medium">{a.client.name}</p>
+                            <p className="truncate text-xs text-muted">{a.service.name}</p>
                           </div>
-                          <div className="hidden items-center gap-2 text-[13px] text-ink-soft sm:flex">
+                          <span title={a.staff.name}>
                             <Avatar name={a.staff.name} color={a.staff.color} size="sm" />
-                            {a.staff.name.split(' ')[0]}
-                          </div>
-                          <StatusBadge status={a.status} />
+                          </span>
                         </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Section>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+          </div>
 
-              <Section title="This week" description="Appointments per day">
-                {insights ? (
-                  <WeekBars days={insights.days} today={today} />
-                ) : (
-                  <Skeleton className="h-40 w-full" />
-                )}
-              </Section>
-            </div>
-
-            <div className="space-y-10">
-              <Section
-                title="Status this week"
-                description={
-                  summary.data ? `${summary.data.week.appointments} active appointments` : undefined
-                }
-              >
-                {weekAppointments.data ? (
-                  <StatusBreakdown counts={countByStatus(weekAppointments.data)} />
-                ) : (
-                  <ListSkeleton rows={4} />
-                )}
-              </Section>
-
-              <Section
-                title="Occupancy"
-                description="Booked time vs. working hours this week"
-                testId="occupancy"
-              >
+          {/* Secondary metrics */}
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+            <Section
+              title="Occupancy"
+              description="Booked time vs. working hours this week"
+              testId="occupancy"
+            >
+              <Panel>
                 {insights ? (
                   insights.occupancy.length === 0 ? (
                     <p className="text-sm text-muted">No working hours set.</p>
@@ -241,16 +316,16 @@ export default function DashboardPage() {
                       {insights.occupancy.map((o) => (
                         <li key={o.staffId}>
                           <div className="mb-1.5 flex items-center justify-between text-[13px]">
-                            <span className="flex items-center gap-2 font-semibold">
+                            <span className="flex items-center gap-2 font-medium">
                               <Avatar name={o.name} color={o.color} size="sm" />
                               {o.name}
                             </span>
-                            <span className="tabular font-bold">{formatPercent(o.rate)}</span>
+                            <span className="tabular">{formatPercent(o.rate)}</span>
                           </div>
                           <Meter value={o.rate ?? 0} />
-                          <p className="mt-1 text-xs text-muted">
-                            {Math.round(o.bookedMinutes / 60)} h booked of{' '}
-                            {Math.round(o.scheduledMinutes / 60)} h
+                          <p className="tabular mt-1 text-[11px] text-muted">
+                            {Math.round(o.bookedMinutes / 60)}h /{' '}
+                            {Math.round(o.scheduledMinutes / 60)}h
                           </p>
                         </li>
                       ))}
@@ -259,8 +334,31 @@ export default function DashboardPage() {
                 ) : (
                   <ListSkeleton rows={3} />
                 )}
-              </Section>
-            </div>
+              </Panel>
+            </Section>
+
+            <Section title="Activity" description="Appointments per day this week">
+              <Panel>
+                {insights ? (
+                  <WeekBars days={insights.days} today={today} />
+                ) : (
+                  <Skeleton className="h-40 w-full" />
+                )}
+              </Panel>
+            </Section>
+
+            <Section
+              title="Status this week"
+              description={s ? `${s.week.appointments} active appointments` : undefined}
+            >
+              <Panel>
+                {weekAppointments.data ? (
+                  <StatusBreakdown counts={countByStatus(weekAppointments.data)} />
+                ) : (
+                  <ListSkeleton rows={4} />
+                )}
+              </Panel>
+            </Section>
           </div>
         </div>
       )}
@@ -271,12 +369,250 @@ export default function DashboardPage() {
 }
 
 function Kpi({ children }: { children: React.ReactNode }) {
-  return <div className="bg-surface p-5 sm:p-6">{children}</div>;
+  return <div className="min-w-0 px-4 py-5 sm:px-5">{children}</div>;
+}
+
+function Panel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-line bg-surface p-4 shadow-soft sm:p-5">
+      {children}
+    </div>
+  );
+}
+
+function NextUp({
+  a,
+  tz,
+  today,
+  now,
+  onClick,
+}: {
+  a: Appointment;
+  tz: string;
+  today: string;
+  now: Date;
+  onClick: () => void;
+}) {
+  const minutes = Math.round((new Date(a.startsAt).getTime() - now.getTime()) / 60_000);
+  const when =
+    minutes <= 0
+      ? 'Now'
+      : minutes < 60
+        ? `In ${minutes} min`
+        : relativeDay(toLocalDate(new Date(a.startsAt), tz), today);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="block w-full bg-night px-4 py-4 text-left text-night-text transition-colors hover:bg-night-2"
+    >
+      <div className="flex items-center justify-between">
+        <span className="eyebrow text-signal">{when}</span>
+        <StatusBadge status={a.status} />
+      </div>
+      <p className="tabular mt-2 text-[26px] leading-none font-medium text-white">
+        {formatTime(a.startsAt, tz)}
+      </p>
+      <p className="mt-2.5 truncate text-[15px] font-medium text-white">{a.client.name}</p>
+      <div className="mt-1 flex items-center justify-between gap-3 text-[13px] text-night-muted">
+        <span className="truncate">
+          {a.service.name} · {a.service.durationMinutes} min
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5">
+          <Avatar name={a.staff.name} color={a.staff.color} size="sm" />
+          {a.staff.name.split(' ')[0]}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+/**
+ * Today at a glance: one lane per professional across the working day.
+ * Hatched = outside working hours; blocks open the appointment detail.
+ */
+function DayTimeline({
+  people,
+  appointments,
+  date,
+  nowMinute,
+  tz,
+  onSelect,
+}: {
+  people: StaffMember[];
+  appointments: Appointment[];
+  date: string;
+  nowMinute: number;
+  tz: string;
+  onSelect: (a: Appointment) => void;
+}) {
+  const weekday = weekdayOf(date);
+  const hours = people.flatMap((p) => (p.workingHours ?? []).filter((h) => h.weekday === weekday));
+  const visible = appointments.filter((a) => a.status !== 'CANCELLED');
+
+  if (hours.length === 0 && visible.length === 0) {
+    return (
+      <EmptyState
+        title="Closed today"
+        description="Nobody is scheduled to work and there are no appointments."
+        testId="timeline-empty"
+      />
+    );
+  }
+
+  const starts = [
+    ...hours.map((h) => h.startMinute),
+    ...visible.map((a) => minutesOfDay(a.startsAt, tz)),
+  ];
+  const ends = [
+    ...hours.map((h) => h.endMinute),
+    ...visible.map((a) => minutesOfDay(a.endsAt, tz)),
+  ];
+  const start = Math.floor(Math.min(...starts) / 60) * 60;
+  const end = Math.ceil(Math.max(...ends) / 60) * 60;
+  const span = end - start;
+  const pct = (m: number) => `${((m - start) / span) * 100}%`;
+  const ticks = Array.from({ length: span / 60 + 1 }, (_, i) => start + i * 60);
+  const showNow = nowMinute >= start && nowMinute <= end;
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-line bg-surface shadow-soft">
+      <div className="min-w-[640px]">
+        {/* Hour ruler */}
+        <div className="grid grid-cols-[132px_1fr] border-b border-line">
+          <div />
+          <div className="relative h-8">
+            {ticks.slice(1, -1).map((t) => (
+              <span
+                key={t}
+                className="tabular absolute top-2.5 -translate-x-1/2 text-[10.5px] text-muted"
+                style={{ left: pct(t) }}
+              >
+                {minutesToTime(t)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative">
+          {people.map((p) => {
+            const ranges = (p.workingHours ?? []).filter((h) => h.weekday === weekday);
+            const mine = visible.filter((a) => a.staff.id === p.id);
+            return (
+              <div
+                key={p.id}
+                className="grid grid-cols-[132px_1fr] border-b border-line last:border-b-0"
+                data-testid="timeline-lane"
+              >
+                <div className="flex items-center gap-2 border-r border-line px-3 py-2">
+                  <Avatar name={p.name} color={p.color} size="sm" />
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-medium">{p.name.split(' ')[0]}</p>
+                    <p className="tabular text-[10.5px] text-muted">
+                      {mine.length} {mine.length === 1 ? 'appt' : 'appts'}
+                    </p>
+                  </div>
+                </div>
+                <div className="hatch relative h-[76px]">
+                  {ranges.map((r) => (
+                    <div
+                      key={r.startMinute}
+                      className="absolute inset-y-0 bg-surface"
+                      style={{
+                        left: pct(r.startMinute),
+                        width: `${((r.endMinute - r.startMinute) / span) * 100}%`,
+                      }}
+                    />
+                  ))}
+                  {ticks.slice(1, -1).map((t) => (
+                    <div
+                      key={t}
+                      className="absolute inset-y-0 border-l border-line/70"
+                      style={{ left: pct(t) }}
+                      aria-hidden
+                    />
+                  ))}
+                  {mine.map((a) => {
+                    const from = minutesOfDay(a.startsAt, tz);
+                    const to = minutesOfDay(a.endsAt, tz);
+                    const roomy = (to - from) / span > 0.07;
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => onSelect(a)}
+                        data-testid="timeline-block"
+                        data-status={a.status}
+                        title={`${formatTime(a.startsAt, tz)} ${a.client.name} · ${a.service.name} (${STATUS_LABELS[a.status]})`}
+                        className={clsx(
+                          'absolute top-1.5 bottom-1.5 overflow-hidden rounded-[4px] border-l-2 px-1 text-left text-[11px] leading-tight transition-[filter] hover:z-10 hover:brightness-95',
+                          STATUS_TONES[a.status].block,
+                        )}
+                        style={{
+                          left: `calc(${pct(from)} + 1px)`,
+                          width: `calc(${((to - from) / span) * 100}% - 2px)`,
+                        }}
+                      >
+                        {roomy && (
+                          <>
+                            <span className="tabular block pt-1 font-medium">
+                              {formatTime(a.startsAt, tz)}
+                            </span>
+                            <span className="block truncate opacity-80">
+                              {a.client.name.split(' ')[0]}
+                            </span>
+                          </>
+                        )}
+                        <span className="sr-only">
+                          {formatTime(a.startsAt, tz)} {a.client.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {showNow && (
+            <div
+              className="pointer-events-none absolute inset-y-0 right-0 left-[132px]"
+              aria-hidden
+            >
+              <div
+                className="absolute inset-y-0 w-px bg-signal"
+                style={{ left: pct(nowMinute) }}
+                data-testid="timeline-now"
+              >
+                <span className="absolute -top-px -left-[3px] size-[7px] rounded-full bg-signal" />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-3 py-2 text-[11px] text-muted">
+        {(['CONFIRMED', 'COMPLETED', 'NO_SHOW'] as AppointmentStatus[]).map((st) => (
+          <span key={st} className="flex items-center gap-1.5">
+            <span className={clsx('size-1.5 rounded-full', STATUS_TONES[st].dot)} aria-hidden />
+            {STATUS_LABELS[st]}
+          </span>
+        ))}
+        <span className="flex items-center gap-1.5">
+          <span className="hatch size-2.5 rounded-[2px] border border-line-strong" aria-hidden />
+          Off hours
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-px bg-signal" aria-hidden />
+          Now
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function Meter({ value }: { value: number }) {
   return (
-    <div className="h-1.5 overflow-hidden rounded-full bg-subtle">
+    <div className="h-1 overflow-hidden rounded-full bg-subtle">
       <div
         className="h-full rounded-full bg-accent transition-[width] duration-500"
         style={{ width: `${Math.round(value * 100)}%` }}
@@ -287,7 +623,7 @@ function Meter({ value }: { value: number }) {
 
 function ListSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="space-y-4 py-2">
+    <div className="space-y-3 py-1">
       {Array.from({ length: rows }, (_, i) => (
         <Skeleton key={i} className="h-9 w-full" />
       ))}
@@ -304,22 +640,22 @@ function WeekBars({
 }) {
   const max = Math.max(1, ...days.map((d) => d.appointments));
   return (
-    <div className="grid h-44 grid-cols-7 items-end gap-2 pt-4 sm:gap-4" data-testid="week-bars">
+    <div className="grid h-40 grid-cols-7 items-end gap-2" data-testid="week-bars">
       {days.map((d) => (
-        <div key={d.date} className="flex h-full flex-col items-center justify-end gap-2">
-          <span className="tabular text-xs font-semibold text-ink-soft">{d.appointments}</span>
+        <div key={d.date} className="flex h-full flex-col items-center justify-end gap-1.5">
+          <span className="tabular text-[11px] text-ink-soft">{d.appointments}</span>
           <div
             className={clsx(
-              'w-full max-w-12 rounded-t-sm transition-[height] duration-500',
-              d.date === today ? 'bg-accent' : d.date < today ? 'bg-success' : 'bg-accent-100',
+              'w-full max-w-9 rounded-t-[3px] transition-[height] duration-500',
+              d.date === today ? 'bg-accent' : d.date < today ? 'bg-night-3' : 'bg-accent-100',
             )}
             style={{ height: `${Math.max((d.appointments / max) * 100, 2)}%` }}
             title={`${d.appointments} appointments · ${formatPrice(d.revenue)}`}
           />
           <span
             className={clsx(
-              'text-xs',
-              d.date === today ? 'font-bold text-accent-ink' : 'text-muted',
+              'tabular text-[10.5px] uppercase',
+              d.date === today ? 'font-medium text-accent-ink' : 'text-muted',
             )}
           >
             {formatDay(d.date, { weekday: 'short', month: undefined, day: undefined })}
@@ -335,7 +671,7 @@ function StatusBreakdown({ counts }: { counts: Record<AppointmentStatus, number>
   const total = order.reduce((s, k) => s + counts[k], 0) || 1;
   return (
     <div data-testid="status-breakdown">
-      <div className="mb-4 flex h-2 gap-0.5 overflow-hidden rounded-full">
+      <div className="mb-3 flex h-1.5 gap-0.5 overflow-hidden rounded-full">
         {order.map(
           (s) =>
             counts[s] > 0 && (
@@ -349,12 +685,12 @@ function StatusBreakdown({ counts }: { counts: Record<AppointmentStatus, number>
       </div>
       <dl className="divide-y divide-line">
         {order.map((s) => (
-          <div key={s} className="flex items-center justify-between py-2 text-sm">
+          <div key={s} className="flex items-center justify-between py-2 text-[13px]">
             <dt className="flex items-center gap-2 text-ink-soft">
-              <span className={clsx('size-2 rounded-full', STATUS_TONES[s].dot)} aria-hidden />
+              <span className={clsx('size-1.5 rounded-full', STATUS_TONES[s].dot)} aria-hidden />
               {STATUS_LABELS[s]}
             </dt>
-            <dd className="tabular font-bold" data-testid={`status-count-${s.toLowerCase()}`}>
+            <dd className="tabular" data-testid={`status-count-${s.toLowerCase()}`}>
               {counts[s]}
             </dd>
           </div>
