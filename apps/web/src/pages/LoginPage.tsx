@@ -97,18 +97,18 @@ export function LoginForm({ onSubmit }: { onSubmit: (values: LoginValues) => Pro
             type="button"
             onClick={() => fill(DEMO.admin)}
             data-testid="fill-demo-admin"
-            className="rounded-md border border-line-strong px-3 py-2.5 text-left transition-colors hover:border-accent hover:bg-accent-50"
+            className="rounded-md border border-line-strong bg-surface px-3 py-2.5 text-left shadow-soft transition-colors hover:border-accent hover:bg-accent-50"
           >
-            <span className="block text-[13px] font-bold">Admin</span>
+            <span className="block text-[13px] font-medium">Admin</span>
             <span className="block truncate text-xs text-muted">Full access</span>
           </button>
           <button
             type="button"
             onClick={() => fill(DEMO.staff)}
             data-testid="fill-demo-staff"
-            className="rounded-md border border-line-strong px-3 py-2.5 text-left transition-colors hover:border-accent hover:bg-accent-50"
+            className="rounded-md border border-line-strong bg-surface px-3 py-2.5 text-left shadow-soft transition-colors hover:border-accent hover:bg-accent-50"
           >
-            <span className="block text-[13px] font-bold">Staff</span>
+            <span className="block text-[13px] font-medium">Staff</span>
             <span className="block truncate text-xs text-muted">Own agenda only</span>
           </button>
         </div>
@@ -127,12 +127,13 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-accent p-12 text-white lg:flex">
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-night p-12 text-white lg:flex">
         <Link to="/" aria-label="BookFlow home">
           <Logo inverted />
         </Link>
         <div className="max-w-md">
-          <p className="font-sans font-semibold tracking-tight text-[44px] leading-[1.05] text-signal-50">
+          <p className="eyebrow mb-5 text-signal">BookFlow workspace</p>
+          <p className="text-[40px] leading-[1.05] font-semibold tracking-[-0.035em] text-white">
             Your whole day, in one calm agenda.
           </p>
           <p className="mt-5 text-[15px] leading-relaxed text-night-muted">
@@ -140,17 +141,17 @@ export default function LoginPage() {
             is next.
           </p>
         </div>
-        <ul className="grid grid-cols-3 gap-6 border-t border-white/10 pt-6 text-[13px] text-night-muted">
+        <ul className="grid grid-cols-3 gap-6 border-t border-night-line pt-6 text-[13px] text-night-muted">
           <li>
-            <span className="block text-xl font-bold text-white">24/7</span>
+            <span className="tabular block text-xl font-medium text-white">24/7</span>
             online booking
           </li>
           <li>
-            <span className="block text-xl font-bold text-white">0</span>
+            <span className="tabular block text-xl font-medium text-white">0</span>
             double bookings
           </li>
           <li>
-            <span className="block text-xl font-bold text-white">4</span>
+            <span className="tabular block text-xl font-medium text-white">4</span>
             steps to book
           </li>
         </ul>
@@ -161,7 +162,9 @@ export default function LoginPage() {
           <Link to="/" aria-label="BookFlow home" className="lg:hidden">
             <Logo />
           </Link>
-          <h1 className="mt-8 text-[28px] font-bold tracking-tight lg:mt-0">Welcome back</h1>
+          <h1 className="mt-8 text-[26px] font-semibold tracking-[-0.03em] lg:mt-0">
+            Welcome back
+          </h1>
           <p className="mt-1 mb-8 text-sm text-muted">Log in to manage your agenda.</p>
           <LoginForm
             onSubmit={async ({ email, password }) => {

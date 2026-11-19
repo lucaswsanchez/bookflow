@@ -18,29 +18,30 @@ import { ClientDetails, clientDetailsSchema } from './schema';
 
 const STEPS = ['Service', 'Professional', 'Date & time', 'Your details'] as const;
 
-/** Compact progress: "Step 2 of 4 · Professional" with a segmented bar. */
+/** Progress: numbered steps in mono; the bar fills as the client advances. */
 export function StepIndicator({ current }: { current: number }) {
   return (
     <div data-testid="step-indicator">
-      <p className="mb-2 flex items-baseline justify-between text-[13px]">
-        <span className="font-semibold text-ink">{STEPS[current]}</span>
-        <span className="text-muted">
-          Step {current + 1} of {STEPS.length}
-        </span>
-      </p>
       <ol className="grid grid-cols-4 gap-1.5" aria-label="Booking progress">
         {STEPS.map((label, i) => (
-          <li
-            key={label}
-            aria-current={i === current ? 'step' : undefined}
-            className={clsx(
-              'h-1 rounded-full transition-colors duration-300',
-              i <= current ? 'bg-accent' : 'bg-line',
-            )}
-          >
-            <span className="sr-only">
+          <li key={label} aria-current={i === current ? 'step' : undefined} className="min-w-0">
+            <span
+              className={clsx(
+                'block h-[3px] rounded-full transition-colors duration-300',
+                i < current ? 'bg-ink' : i === current ? 'bg-accent' : 'bg-line',
+              )}
+              aria-hidden
+            />
+            <span
+              className={clsx(
+                'mt-2 flex items-baseline gap-1.5 truncate text-[12px]',
+                i === current ? 'font-medium text-ink' : 'text-muted',
+                i !== current && 'max-sm:sr-only',
+              )}
+            >
+              <span className="tabular text-[11px] text-faint">0{i + 1}</span>
               {label}
-              {i < current ? ' (done)' : ''}
+              {i < current && <span className="sr-only"> (done)</span>}
             </span>
           </li>
         ))}
@@ -63,13 +64,12 @@ function OptionRow({
       type="button"
       onClick={onClick}
       data-testid={testId}
-      className="group flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-accent-50/50 focus-visible:bg-accent-50/50 sm:px-5"
+      className="group flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-canvas focus-visible:bg-canvas sm:px-5"
     >
       {children}
-      <ChevronRight
-        className="size-4 shrink-0 text-faint transition-transform group-hover:translate-x-0.5 group-hover:text-accent-ink"
-        aria-hidden
-      />
+      <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line text-faint transition-colors group-hover:border-accent group-hover:bg-accent group-hover:text-white">
+        <ChevronRight className="size-3.5" aria-hidden />
+      </span>
     </button>
   );
 }
@@ -91,27 +91,27 @@ export function ServiceList({
   }
   return (
     <ul
-      className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface"
+      className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface"
       data-testid="service-list"
     >
       {services.map((s) => (
         <li key={s.id}>
           <OptionRow onClick={() => onSelect(s)} testId={`service-option-${slugify(s.name)}`}>
             <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-ink group-hover:text-accent-ink">
-                {s.name}
-              </span>
+              <span className="block text-[15px] font-medium text-ink">{s.name}</span>
               {s.description && (
                 <span className="mt-0.5 block text-[13px] leading-snug text-muted">
                   {s.description}
                 </span>
               )}
-              <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-ink-soft">
-                <Clock className="size-3.5 text-faint" aria-hidden />
+              <span className="tabular mt-1.5 inline-flex items-center gap-1 text-[11px] text-muted">
+                <Clock className="size-3 text-faint" aria-hidden />
                 {formatDuration(s.durationMinutes)}
               </span>
             </span>
-            <span className="tabular shrink-0 font-semibold text-ink">{formatPrice(s.price)}</span>
+            <span className="tabular shrink-0 text-[15px] font-medium text-ink">
+              {formatPrice(s.price)}
+            </span>
           </OptionRow>
         </li>
       ))}
@@ -136,7 +136,7 @@ export function StaffList({
   }
   return (
     <ul
-      className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface"
+      className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface"
       data-testid="staff-list"
     >
       {staff.map((s) => (
@@ -144,9 +144,7 @@ export function StaffList({
           <OptionRow onClick={() => onSelect(s)} testId={`staff-option-${slugify(s.name)}`}>
             <Avatar name={s.name} color={s.color} size="lg" />
             <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-ink group-hover:text-accent-ink">
-                {s.name}
-              </span>
+              <span className="block text-[15px] font-medium text-ink">{s.name}</span>
               {s.title && <span className="block text-[13px] text-muted">{s.title}</span>}
             </span>
           </OptionRow>
@@ -183,15 +181,15 @@ export function DayPicker({
             onClick={() => onSelect(d)}
             data-testid={`day-option-${d}`}
             className={clsx(
-              'flex w-[60px] shrink-0 snap-start flex-col items-center rounded-lg border py-2.5 transition-colors',
+              'flex w-[58px] shrink-0 snap-start flex-col items-center rounded-lg border py-2.5 transition-colors',
               active
-                ? 'border-accent bg-accent text-white'
-                : 'border-line bg-surface text-ink hover:border-accent',
+                ? 'border-ink bg-ink text-white'
+                : 'border-line bg-surface text-ink hover:border-ink-soft',
             )}
           >
             <span
               className={clsx(
-                'text-[11px] font-semibold',
+                'text-[11px] font-medium',
                 active ? 'text-night-muted' : 'text-muted',
               )}
             >
@@ -199,9 +197,7 @@ export function DayPicker({
                 ? 'Today'
                 : formatDay(d, { weekday: 'short', month: undefined, day: undefined })}
             </span>
-            <span className="tabular text-xl leading-tight font-semibold">
-              {Number(d.slice(8))}
-            </span>
+            <span className="tabular text-lg leading-tight font-medium">{Number(d.slice(8))}</span>
             <span className={clsx('text-[11px]', active ? 'text-night-muted' : 'text-muted')}>
               {formatDay(d, { weekday: undefined, month: 'short', day: undefined })}
             </span>
@@ -265,7 +261,7 @@ export function SlotPicker({
         if (group.length === 0) return null;
         return (
           <div key={label}>
-            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-muted">
+            <p className="eyebrow mb-2 flex items-center gap-1.5">
               <Icon className="size-3.5" aria-hidden /> {label}
               <span className="text-faint">· {group.length}</span>
             </p>
@@ -278,7 +274,7 @@ export function SlotPicker({
                     aria-pressed={selected === slot.start}
                     data-testid={`slot-option-${slot.time.replace(':', '-')}`}
                     className={clsx(
-                      'tabular h-11 w-full rounded-md border text-sm font-semibold transition-colors',
+                      'tabular h-11 w-full rounded-md border text-[14px] font-medium transition-colors',
                       selected === slot.start
                         ? 'border-accent bg-accent text-white'
                         : 'border-line bg-surface text-ink hover:border-accent hover:bg-accent-50 hover:text-accent-ink',
