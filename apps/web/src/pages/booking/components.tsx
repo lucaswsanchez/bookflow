@@ -23,7 +23,7 @@ export function StepIndicator({ current }: { current: number }) {
   return (
     <div data-testid="step-indicator">
       <p className="mb-2 flex items-baseline justify-between text-[13px]">
-        <span className="font-bold text-ink">{STEPS[current]}</span>
+        <span className="font-semibold text-ink">{STEPS[current]}</span>
         <span className="text-muted">
           Step {current + 1} of {STEPS.length}
         </span>
@@ -98,7 +98,9 @@ export function ServiceList({
         <li key={s.id}>
           <OptionRow onClick={() => onSelect(s)} testId={`service-option-${slugify(s.name)}`}>
             <span className="min-w-0 flex-1">
-              <span className="block font-bold text-ink group-hover:text-accent-ink">{s.name}</span>
+              <span className="block font-semibold text-ink group-hover:text-accent-ink">
+                {s.name}
+              </span>
               {s.description && (
                 <span className="mt-0.5 block text-[13px] leading-snug text-muted">
                   {s.description}
@@ -109,7 +111,7 @@ export function ServiceList({
                 {formatDuration(s.durationMinutes)}
               </span>
             </span>
-            <span className="tabular shrink-0 font-bold text-ink">{formatPrice(s.price)}</span>
+            <span className="tabular shrink-0 font-semibold text-ink">{formatPrice(s.price)}</span>
           </OptionRow>
         </li>
       ))}
@@ -142,7 +144,9 @@ export function StaffList({
           <OptionRow onClick={() => onSelect(s)} testId={`staff-option-${slugify(s.name)}`}>
             <Avatar name={s.name} color={s.color} size="lg" />
             <span className="min-w-0 flex-1">
-              <span className="block font-bold text-ink group-hover:text-accent-ink">{s.name}</span>
+              <span className="block font-semibold text-ink group-hover:text-accent-ink">
+                {s.name}
+              </span>
               {s.title && <span className="block text-[13px] text-muted">{s.title}</span>}
             </span>
           </OptionRow>
@@ -195,7 +199,9 @@ export function DayPicker({
                 ? 'Today'
                 : formatDay(d, { weekday: 'short', month: undefined, day: undefined })}
             </span>
-            <span className="tabular text-xl leading-tight font-bold">{Number(d.slice(8))}</span>
+            <span className="tabular text-xl leading-tight font-semibold">
+              {Number(d.slice(8))}
+            </span>
             <span className={clsx('text-[11px]', active ? 'text-night-muted' : 'text-muted')}>
               {formatDay(d, { weekday: undefined, month: 'short', day: undefined })}
             </span>

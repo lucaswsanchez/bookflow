@@ -59,7 +59,7 @@ export function AppointmentDetail({
         <div className="space-y-6">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-lg font-bold text-ink">{a.client.name}</p>
+              <p className="truncate text-lg font-semibold text-ink">{a.client.name}</p>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted">
                 <a
                   href={`tel:${a.client.phone}`}

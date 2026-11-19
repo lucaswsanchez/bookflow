@@ -247,10 +247,10 @@ export default function AppointmentsPage() {
       ) : (
         <>
           <p className="mb-3 text-[13px] text-muted" data-testid="appointments-summary">
-            <span className="font-bold text-ink">{filtered.length}</span> appointment
+            <span className="font-semibold text-ink">{filtered.length}</span> appointment
             {filtered.length === 1 ? '' : 's'} ·{' '}
-            <span className="font-bold text-ink">{formatPrice(revenueOf(filtered))}</span> confirmed
-            or completed
+            <span className="font-semibold text-ink">{formatPrice(revenueOf(filtered))}</span>{' '}
+            confirmed or completed
           </p>
 
           {/* Desktop table */}
@@ -273,7 +273,7 @@ export default function AppointmentsPage() {
                       <tr>
                         <td
                           colSpan={isAdmin ? 6 : 5}
-                          className="border-b border-line bg-canvas/70 px-4 py-2 text-[13px] font-bold text-ink"
+                          className="border-b border-line bg-canvas/70 px-4 py-2 text-[13px] font-semibold text-ink"
                         >
                           {day === today ? 'Today · ' : ''}
                           {formatDay(day, { weekday: 'long', month: 'long' })}
@@ -288,7 +288,7 @@ export default function AppointmentsPage() {
                           onClick={() => setSelected(a)}
                           className="cursor-pointer bg-surface transition-colors hover:bg-subtle/60"
                         >
-                          <Td className="tabular font-bold">
+                          <Td className="tabular font-medium">
                             {formatTime(a.startsAt, tz)}
                             <span className="ml-1 font-normal text-faint">
                               {formatTime(a.endsAt, tz)}
@@ -344,7 +344,7 @@ export default function AppointmentsPage() {
             <div className="space-y-6">
               {byDay.map(([day, items]) => (
                 <section key={day}>
-                  <h3 className="mb-2 text-[13px] font-bold">
+                  <h3 className="mb-2 text-[13px] font-semibold">
                     {day === today ? 'Today · ' : ''}
                     {formatDay(day, { weekday: 'long', month: 'long' })}
                   </h3>
@@ -356,7 +356,7 @@ export default function AppointmentsPage() {
                           onClick={() => setSelected(a)}
                           className="flex w-full items-start gap-3 px-4 py-3 text-left"
                         >
-                          <span className="tabular w-12 shrink-0 pt-0.5 font-bold">
+                          <span className="tabular w-12 shrink-0 pt-0.5 font-medium">
                             {formatTime(a.startsAt, tz)}
                           </span>
                           <span className="min-w-0 flex-1">

@@ -118,7 +118,7 @@ export default function ServicesPage() {
       ) : (
         <>
           <p className="mb-3 text-[13px] text-muted">
-            <span className="font-bold text-ink">{activeCount}</span> of {services.data?.length}{' '}
+            <span className="font-semibold text-ink">{activeCount}</span> of {services.data?.length}{' '}
             services bookable online
           </p>
           {desktop ? (
@@ -159,7 +159,7 @@ export default function ServicesPage() {
                             {formatDuration(s.durationMinutes)}
                           </span>
                         </Td>
-                        <Td className="tabular text-right font-semibold whitespace-nowrap text-ink">
+                        <Td className="tabular text-right font-medium whitespace-nowrap text-ink">
                           {formatPrice(s.price)}
                         </Td>
                         <Td>
@@ -199,7 +199,7 @@ export default function ServicesPage() {
                           <p className="mt-0.5 text-[13px] text-muted">{s.description}</p>
                         )}
                       </div>
-                      <p className="tabular shrink-0 font-bold">{formatPrice(s.price)}</p>
+                      <p className="tabular shrink-0 font-medium">{formatPrice(s.price)}</p>
                     </div>
                     <div className="mt-3 flex items-center gap-3 text-[13px] text-ink-soft">
                       <span className="inline-flex items-center gap-1.5">
