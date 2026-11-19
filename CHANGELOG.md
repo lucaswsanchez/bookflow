@@ -11,11 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Nightly workflow that redeploys the API so the demo seed always matches today.
 - Open Graph and Twitter preview image and tags for sharing the live demo.
+- Landing v3: problem/solution pairs, real screens under each step, a features bento with the real
+  exclusion-constraint SQL, an "Under the hood" band and industry cards.
 
 ### Changed
 
 - The web app wakes the free-tier API with a `/health` ping on load.
 - `zod` 4 and `@hookform/resolvers` 5 (security advisory fixed).
+- Booking and login routes are lazy-loaded; the landing's main bundle drops to ~110 kB gzip.
 
 ## [1.0.0] - 2026-11-17
 
