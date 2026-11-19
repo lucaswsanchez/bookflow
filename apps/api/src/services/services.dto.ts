@@ -10,6 +10,9 @@ import {
   MinLength,
 } from 'class-validator';
 
+/** Upper bound for a service price; keeps values far below the 32-bit column limit. */
+export const MAX_PRICE = 10_000_000;
+
 export class CreateServiceDto {
   @ApiProperty({ example: 'Classic Haircut' })
   @IsString()
@@ -29,9 +32,13 @@ export class CreateServiceDto {
   @Max(480)
   durationMinutes: number;
 
-  @ApiProperty({ example: 9000, description: 'Price in whole Argentine pesos (ARS)' })
+  @ApiProperty({
+    example: 9000,
+    description: `Price in whole Argentine pesos (ARS), 0–${MAX_PRICE.toLocaleString('en-US')}`,
+  })
   @IsInt()
   @Min(0)
+  @Max(MAX_PRICE)
   price: number;
 
   @ApiPropertyOptional({ default: true })

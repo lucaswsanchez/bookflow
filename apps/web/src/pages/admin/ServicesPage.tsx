@@ -34,7 +34,11 @@ const schema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(80),
   description: z.string().max(300, 'At most 300 characters').optional(),
   durationMinutes: z.coerce.number().int().min(5, 'At least 5 minutes').max(480, 'At most 8 hours'),
-  price: z.coerce.number().int().min(0, 'Price cannot be negative'),
+  price: z.coerce
+    .number()
+    .int()
+    .min(0, 'Price cannot be negative')
+    .max(10_000_000, 'At most $10,000,000'),
   active: z.boolean(),
 });
 type FormInput = z.input<typeof schema>;
