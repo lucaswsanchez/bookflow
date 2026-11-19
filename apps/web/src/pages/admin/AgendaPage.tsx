@@ -333,7 +333,7 @@ export default function AgendaPage() {
                     >
                       {member && <Avatar name={member.name} color={member.color} size="sm" />}
                       {member?.name.split(' ')[0]}
-                      <span className={selectedTab ? 'text-night-muted' : 'text-faint'}>
+                      <span className={selectedTab ? 'text-accent-50' : 'text-muted'}>
                         {countActive(c.items)}
                       </span>
                     </button>

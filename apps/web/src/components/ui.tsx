@@ -349,7 +349,7 @@ export function Field({
         className="flex items-baseline gap-1.5 text-[13px] font-medium text-ink"
       >
         {label}
-        {optional && <span className="text-xs font-normal text-faint">Optional</span>}
+        {optional && <span className="text-xs font-normal text-muted">Optional</span>}
       </label>
       {children}
       {error ? (
