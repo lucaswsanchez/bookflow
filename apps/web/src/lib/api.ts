@@ -125,3 +125,11 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
+
+/**
+ * The API runs on a free tier that sleeps when idle. Pinging /health as soon as the app
+ * loads wakes it up while the visitor reads, so the first real request is fast.
+ */
+export function warmUpApi() {
+  fetch(`${API_URL}/health`, { cache: 'no-store' }).catch(() => undefined);
+}

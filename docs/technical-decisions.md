@@ -106,3 +106,20 @@ reports on the client kept the redesign free of backend changes, and the functio
 
 **Trade-off:** reports download every appointment in the period. That is fine for a small business
 (hundreds per month). A larger tenant would need an aggregated `/reports` endpoint.
+
+## 9. A live demo that stays fresh and wakes up early
+
+**Decision:** a scheduled GitHub Actions workflow (`.github/workflows/refresh-demo.yml`) calls the
+Render deploy hook every night, which re-runs migrations and the seed. The web app pings `/health`
+as soon as it loads.
+
+**Why:** the seed creates appointments relative to the day it runs (the past 7 days and the next
+14), so without a redeploy the demo would run out of data after two weeks. The free Render tier
+sleeps when idle; the early ping wakes it while the visitor is still reading the landing page.
+
+**Trade-off:** bookings made by visitors are wiped every night, which is the desired behaviour for
+a public demo.
+
+**Known advisory:** `pnpm audit --prod` reports `deepmerge-ts` (high) as a transitive dependency
+of the Prisma 6 CLI. It only runs during `prisma` commands at build time, never in the API
+process, and is fixed by upgrading to Prisma 7, a major version planned separately.

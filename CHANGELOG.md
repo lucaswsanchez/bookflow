@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Nightly workflow that redeploys the API so the demo seed always matches today.
+- Open Graph and Twitter preview image and tags for sharing the live demo.
+
+### Changed
+
+- The web app wakes the free-tier API with a `/health` ping on load.
+- `zod` 4 and `@hookform/resolvers` 5 (security advisory fixed).
+
 ## [1.0.0] - 2026-11-17
 
 ### Added
