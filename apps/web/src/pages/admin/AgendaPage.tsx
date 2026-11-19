@@ -93,7 +93,7 @@ export default function AgendaPage() {
             <div className="flex min-w-0 items-center gap-2.5">
               <Avatar name={s.name} color={s.color} size="sm" />
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-bold text-ink">{s.name}</p>
+                <p className="truncate text-[13px] font-semibold text-ink">{s.name}</p>
                 <p className="text-[11px] text-muted">
                   {countActive(items)} appointment{countActive(items) === 1 ? '' : 's'}
                 </p>
@@ -176,162 +176,171 @@ export default function AgendaPage() {
         }
       />
 
-      {/* Toolbar */}
-      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex min-w-0 items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setDate(today)}
-            data-testid="agenda-today"
-          >
-            Today
-          </Button>
-          <div className="flex shrink-0 items-center">
-            <IconButton
-              label="Previous"
+      <div className="overflow-hidden rounded-lg border border-line bg-surface shadow-soft">
+        {/* Toolbar */}
+        <div className="flex flex-col gap-2.5 border-b border-line px-3 py-2.5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex min-w-0 items-center gap-2">
+            <Button
+              variant="secondary"
               size="sm"
-              onClick={() => move(-1)}
-              data-testid="agenda-prev"
+              onClick={() => setDate(today)}
+              data-testid="agenda-today"
             >
-              <ChevronLeft className="size-4" aria-hidden />
-            </IconButton>
-            <IconButton label="Next" size="sm" onClick={() => move(1)} data-testid="agenda-next">
-              <ChevronRight className="size-4" aria-hidden />
-            </IconButton>
-          </div>
-          <h2
-            className="truncate text-base font-bold tracking-tight sm:text-lg"
-            data-testid="agenda-range"
-          >
-            {view === 'day'
-              ? formatDay(date, desktop ? { weekday: 'long', month: 'long' } : {})
-              : `${formatDay(from, { weekday: undefined })} – ${formatDay(to, { weekday: undefined })}`}
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="shrink-0">
-            <span className="sr-only">Go to date</span>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => e.target.value && setDate(e.target.value)}
-              data-testid="agenda-date-input"
-              className="h-8 rounded-md border border-line-strong bg-surface px-2 text-[13px] text-ink-soft hover:border-faint focus:border-accent focus:ring-3 focus:ring-accent-100 focus:outline-none"
-            />
-          </label>
-          {isAdmin && (
-            <Select
-              aria-label="Filter by professional"
-              value={staffId}
-              onChange={(e) => setStaffId(e.target.value)}
-              data-testid="agenda-staff-filter"
-              className="h-8! min-w-0 flex-1 text-[13px] xl:w-48 xl:flex-none"
-            >
-              <option value="">All staff</option>
-              {staff.data?.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </Select>
-          )}
-          <div className="ml-auto shrink-0">
-            <Segmented
-              label="View"
-              value={view}
-              onChange={setView}
-              options={[
-                { value: 'day', label: 'Day', testId: 'agenda-view-day' },
-                { value: 'week', label: 'Week', testId: 'agenda-view-week' },
-              ]}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Summary + legend */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-[13px]">
-        <p className="text-muted">
-          {appointments.isLoading ? (
-            'Loading…'
-          ) : active === 0 ? (
-            <span data-testid="agenda-empty">No appointments in this period.</span>
-          ) : (
-            <>
-              <span className="font-bold text-ink">{active}</span> appointment
-              {active === 1 ? '' : 's'}
-              {visible.length > active && ` · ${visible.length - active} cancelled`}
-            </>
-          )}
-        </p>
-        <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted" aria-label="Legend">
-          {LEGEND.map((s) => (
-            <li key={s} className="flex items-center gap-1.5">
-              <span className={clsx('size-2 rounded-full', STATUS_TONES[s].dot)} aria-hidden />
-              {STATUS_LABELS[s]}
-            </li>
-          ))}
-          <li className="flex items-center gap-1.5">
-            <span className="hatch size-2.5 rounded-sm border border-line-strong" aria-hidden />
-            Off hours
-          </li>
-        </ul>
-      </div>
-
-      {appointments.isError ? (
-        <ErrorState message={appointments.error.message} onRetry={() => appointments.refetch()} />
-      ) : appointments.isLoading || staff.isLoading ? (
-        <Skeleton className="h-[560px] w-full" />
-      ) : (
-        <>
-          {phoneColumns && (
-            <div
-              className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]"
-              role="tablist"
-              aria-label="Professional"
-            >
-              {columns.map((c) => {
-                const member = people.find((p) => p.id === c.key);
-                const selectedTab = c.key === phoneColumns[0].key;
-                return (
-                  <button
-                    key={c.key}
-                    type="button"
-                    role="tab"
-                    aria-selected={selectedTab}
-                    onClick={() => setPhoneStaff(c.key)}
-                    data-testid={`agenda-staff-tab-${slugify(member?.name ?? c.key)}`}
-                    className={clsx(
-                      'flex shrink-0 items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-[13px] font-semibold transition-colors',
-                      selectedTab
-                        ? 'border-accent bg-accent text-white'
-                        : 'border-line-strong bg-surface text-ink-soft',
-                    )}
-                  >
-                    {member && <Avatar name={member.name} color={member.color} size="sm" />}
-                    {member?.name.split(' ')[0]}
-                    <span className={selectedTab ? 'text-night-muted' : 'text-faint'}>
-                      {countActive(c.items)}
-                    </span>
-                  </button>
-                );
-              })}
+              Today
+            </Button>
+            <div className="flex shrink-0 items-center">
+              <IconButton
+                label="Previous"
+                size="sm"
+                onClick={() => move(-1)}
+                data-testid="agenda-prev"
+              >
+                <ChevronLeft className="size-4" aria-hidden />
+              </IconButton>
+              <IconButton label="Next" size="sm" onClick={() => move(1)} data-testid="agenda-next">
+                <ChevronRight className="size-4" aria-hidden />
+              </IconButton>
             </div>
-          )}
-          <TimeGrid
-            columns={phoneColumns ?? columns}
-            tz={tz}
-            today={today}
-            dayStart={dayStart}
-            dayEnd={dayEnd}
-            showStaff={people.length > 1 && (view === 'week' || columns.length === 1)}
-            dense={view === 'week'}
-            testId={view === 'day' ? 'agenda-day' : 'agenda-week'}
-            onSelect={setSelected}
-          />
-        </>
-      )}
+            <h2
+              className="ml-1 truncate text-[15px] font-semibold tracking-[-0.01em]"
+              data-testid="agenda-range"
+            >
+              {view === 'day'
+                ? formatDay(date, desktop ? { weekday: 'long', month: 'long' } : {})
+                : `${formatDay(from, { weekday: undefined })} – ${formatDay(to, { weekday: undefined })}`}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="shrink-0">
+              <span className="sr-only">Go to date</span>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => e.target.value && setDate(e.target.value)}
+                data-testid="agenda-date-input"
+                className="tabular h-8 rounded-md border border-line-strong bg-surface px-2 text-[12px] text-ink-soft shadow-soft hover:border-faint focus:border-accent focus:ring-3 focus:ring-accent-100 focus:outline-none"
+              />
+            </label>
+            {isAdmin && (
+              <Select
+                aria-label="Filter by professional"
+                value={staffId}
+                onChange={(e) => setStaffId(e.target.value)}
+                data-testid="agenda-staff-filter"
+                className="h-8! min-w-0 flex-1 text-[13px] xl:w-48 xl:flex-none"
+              >
+                <option value="">All staff</option>
+                {staff.data?.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+            <div className="ml-auto shrink-0">
+              <Segmented
+                label="View"
+                value={view}
+                onChange={setView}
+                options={[
+                  { value: 'day', label: 'Day', testId: 'agenda-view-day' },
+                  { value: 'week', label: 'Week', testId: 'agenda-view-week' },
+                ]}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Summary + legend */}
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1.5 border-b border-line bg-canvas px-3 py-2 text-[12px]">
+          <p className="text-muted">
+            {appointments.isLoading ? (
+              'Loading…'
+            ) : active === 0 ? (
+              <span data-testid="agenda-empty">No appointments in this period.</span>
+            ) : (
+              <>
+                <span className="tabular font-medium text-ink">{active}</span> appointment
+                {active === 1 ? '' : 's'}
+                {visible.length > active && ` · ${visible.length - active} cancelled`}
+              </>
+            )}
+          </p>
+          <ul
+            className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted"
+            aria-label="Legend"
+          >
+            {LEGEND.map((s) => (
+              <li key={s} className="flex items-center gap-1.5">
+                <span className={clsx('size-1.5 rounded-full', STATUS_TONES[s].dot)} aria-hidden />
+                {STATUS_LABELS[s]}
+              </li>
+            ))}
+            <li className="flex items-center gap-1.5">
+              <span className="hatch size-2.5 rounded-sm border border-line-strong" aria-hidden />
+              Off hours
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="h-2.5 w-px bg-signal" aria-hidden />
+              Now
+            </li>
+          </ul>
+        </div>
+
+        {appointments.isError ? (
+          <ErrorState message={appointments.error.message} onRetry={() => appointments.refetch()} />
+        ) : appointments.isLoading || staff.isLoading ? (
+          <Skeleton className="h-[560px] w-full rounded-none" />
+        ) : (
+          <>
+            {phoneColumns && (
+              <div
+                className="flex gap-2 overflow-x-auto border-b border-line px-3 py-2 [scrollbar-width:none]"
+                role="tablist"
+                aria-label="Professional"
+              >
+                {columns.map((c) => {
+                  const member = people.find((p) => p.id === c.key);
+                  const selectedTab = c.key === phoneColumns[0].key;
+                  return (
+                    <button
+                      key={c.key}
+                      type="button"
+                      role="tab"
+                      aria-selected={selectedTab}
+                      onClick={() => setPhoneStaff(c.key)}
+                      data-testid={`agenda-staff-tab-${slugify(member?.name ?? c.key)}`}
+                      className={clsx(
+                        'flex shrink-0 items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-[13px] font-semibold transition-colors',
+                        selectedTab
+                          ? 'border-accent bg-accent text-white'
+                          : 'border-line-strong bg-surface text-ink-soft',
+                      )}
+                    >
+                      {member && <Avatar name={member.name} color={member.color} size="sm" />}
+                      {member?.name.split(' ')[0]}
+                      <span className={selectedTab ? 'text-night-muted' : 'text-faint'}>
+                        {countActive(c.items)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <TimeGrid
+              columns={phoneColumns ?? columns}
+              tz={tz}
+              today={today}
+              dayStart={dayStart}
+              dayEnd={dayEnd}
+              showStaff={people.length > 1 && (view === 'week' || columns.length === 1)}
+              dense={view === 'week'}
+              testId={view === 'day' ? 'agenda-day' : 'agenda-week'}
+              onSelect={setSelected}
+            />
+          </>
+        )}
+      </div>
 
       <AppointmentDetail appointment={selected} timeZone={tz} onClose={() => setSelected(null)} />
     </>
@@ -392,7 +401,7 @@ function TimeGrid({
   const minColumn = columns.length > 3 ? 'min-w-[120px]' : 'min-w-[200px]';
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-line bg-surface" data-testid={testId}>
+    <div className="overflow-x-auto bg-surface" data-testid={testId}>
       <div className="flex min-w-fit">
         {/* Time gutter */}
         <div className="sticky left-0 z-20 w-14 shrink-0 border-r border-line bg-surface">
@@ -401,7 +410,7 @@ function TimeGrid({
             {hours.map((m) => (
               <span
                 key={m}
-                className="tabular absolute right-2 -translate-y-1/2 bg-surface px-0.5 text-[11px] text-faint first:translate-y-0.5"
+                className="tabular absolute right-2 -translate-y-1/2 bg-surface px-0.5 text-[10.5px] text-muted first:translate-y-0.5"
                 style={{ top: y(m) }}
               >
                 {minutesToTime(m)}
@@ -430,8 +439,8 @@ function TimeGrid({
               <div
                 className={clsx(
                   'sticky top-0 z-10 flex h-14 items-center border-b border-line px-3',
-                  col.date === today && columns.length > 1 && !showStaff
-                    ? 'bg-accent-50/60'
+                  col.date === today && columns.some((c) => c.date !== col.date)
+                    ? 'bg-accent-50'
                     : 'bg-surface',
                 )}
               >
@@ -485,8 +494,8 @@ function TimeGrid({
                     data-testid="now-line"
                     aria-hidden
                   >
-                    <span className="-ml-1 size-2 rounded-full bg-danger" />
-                    <span className="h-px flex-1 bg-danger" />
+                    <span className="-ml-1 size-2 rounded-full bg-signal ring-2 ring-surface" />
+                    <span className="h-0.5 flex-1 bg-signal" />
                   </div>
                 )}
               </div>
@@ -550,13 +559,13 @@ function Block({
       {compact ? (
         <span className="flex items-center gap-1">
           {dot}
-          <span className="tabular font-bold">{formatTime(a.startsAt, tz)}</span>
+          <span className="tabular font-medium">{formatTime(a.startsAt, tz)}</span>
           <span className="sr-only">{a.client.name}</span>
         </span>
       ) : (
         <>
-          <span className="tabular shrink-0 font-bold">{formatTime(a.startsAt, tz)}</span>
-          <span className={clsx('truncate font-semibold', !short && 'block')}>{a.client.name}</span>
+          <span className="tabular shrink-0 font-medium">{formatTime(a.startsAt, tz)}</span>
+          <span className={clsx('truncate font-medium', !short && 'block')}>{a.client.name}</span>
           {!short && (
             <span className="mt-0.5 flex items-center gap-1 truncate font-normal opacity-80">
               {dot}
