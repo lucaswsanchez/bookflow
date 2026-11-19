@@ -37,7 +37,8 @@ const schema = z.object({
   price: z.coerce.number().int().min(0, 'Price cannot be negative'),
   active: z.boolean(),
 });
-type FormValues = z.infer<typeof schema>;
+type FormInput = z.input<typeof schema>;
+type FormValues = z.output<typeof schema>;
 
 export default function ServicesPage() {
   const queryClient = useQueryClient();
@@ -265,7 +266,7 @@ function ServiceForm({ service, onDone }: { service: Service | null; onDone: () 
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({
+  } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: service?.name ?? '',

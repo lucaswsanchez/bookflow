@@ -1,0 +1,27 @@
+name: Refresh live demo
+
+# The demo seed generates appointments relative to "today" (past 7 days, next 14 days).
+# Redeploying the API every night re-runs the seed, so the live demo always has current data.
+on:
+  schedule:
+    - cron: '0 6 * * *' # 03:00 in Argentina (UTC-3)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  redeploy:
+    name: Trigger Render deploy (re-runs migrations and seed)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the Render deploy hook
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "::warning::RENDER_DEPLOY_HOOK secret is not set; skipping."
+            exit 0
+          fi
+          curl --fail --silent --show-error -X POST "$RENDER_DEPLOY_HOOK" > /dev/null
+          echo "Deploy triggered."

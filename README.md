@@ -28,6 +28,7 @@
 > | Staff | `staff@demo.com` | `Staff123!` | Only their own agenda |
 >
 > ⏳ The API runs on Render's free tier: **the first request may take ~50s (free tier cold start)**.
+> The demo data is regenerated every night, so the agenda always has today's appointments.
 
 ![BookFlow overview: revenue, next appointments, status and occupancy](docs/screenshots/dashboard.jpg)
 
@@ -137,7 +138,7 @@ bookflow/
 │   └── web/                  # React + Vite SPA
 │       └── src/{pages,components,auth,lib}
 ├── docs/                     # ER diagram, technical decisions, screenshots
-├── .github/workflows/ci.yml
+├── .github/workflows/        # ci.yml (every PR) and refresh-demo.yml (nightly demo reseed)
 ├── docker-compose.yml
 └── render.yaml               # Render Blueprint
 ```
