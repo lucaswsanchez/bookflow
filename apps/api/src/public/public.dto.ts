@@ -12,6 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { PHONE_REGEX } from '../clients/clients.dto';
+import { Trim } from '../common/decorators';
 
 export class AvailabilityQueryDto {
   @ApiProperty()
@@ -31,12 +32,14 @@ export class AvailabilityQueryDto {
 
 export class BookingClientDto {
   @ApiProperty({ example: 'Juan Pérez' })
+  @Trim()
   @IsString()
   @MinLength(2)
   @MaxLength(80)
   name: string;
 
   @ApiProperty({ example: '+54 379 4501234' })
+  @Trim()
   @Matches(PHONE_REGEX, { message: 'phone must be a valid phone number' })
   phone: string;
 

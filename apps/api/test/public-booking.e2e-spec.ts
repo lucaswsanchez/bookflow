@@ -132,4 +132,19 @@ describe('Public booking (e2e)', () => {
       .expect(400);
     expect(res.body.message.length).toBeGreaterThanOrEqual(2);
   });
+
+  it('rejects a client with a blank name or a phone without digits', async () => {
+    const res = await request(app.getHttpServer())
+      .post(`${base}/bookings`)
+      .send({
+        serviceId,
+        staffId,
+        startsAt: new Date(Date.now() + 86_400_000).toISOString(),
+        client: { name: '   ', phone: '------' },
+      })
+      .expect(400);
+    const messages = JSON.stringify(res.body.message);
+    expect(messages).toContain('client.name');
+    expect(messages).toContain('client.phone');
+  });
 });
