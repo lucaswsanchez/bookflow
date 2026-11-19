@@ -199,15 +199,15 @@ export default function ReportsPage() {
             }
             testId="report-daily-chart"
           >
-            <div className="h-72 pt-4">
+            <div className="h-72 rounded-lg border border-line bg-surface p-4 shadow-soft">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={report.days} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                  <CartesianGrid vertical={false} stroke="#e8e9e3" />
+                  <CartesianGrid vertical={false} stroke="#e5e8ee" />
                   <XAxis
                     dataKey="date"
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fontSize: 11, fill: '#758078' }}
+                    tick={{ fontSize: 11, fill: '#778191', fontFamily: 'Geist Mono Variable' }}
                     tickFormatter={(d: string) => String(Number(d.slice(8)))}
                     interval={report.days.length > 14 ? 1 : 0}
                   />
@@ -215,18 +215,18 @@ export default function ReportsPage() {
                     tickLine={false}
                     axisLine={false}
                     width={44}
-                    tick={{ fontSize: 11, fill: '#758078' }}
+                    tick={{ fontSize: 11, fill: '#778191', fontFamily: 'Geist Mono Variable' }}
                     allowDecimals={false}
                     tickFormatter={(v: number) =>
                       metric === 'revenue' ? compact.format(v) : String(v)
                     }
                   />
                   <Tooltip
-                    cursor={{ fill: '#f1f0ea' }}
+                    cursor={{ fill: '#eff1f5' }}
                     contentStyle={{
                       borderRadius: 6,
-                      border: '1px solid #e8e9e3',
-                      boxShadow: '0 12px 32px -12px rgb(23 61 50 / 0.25)',
+                      border: '1px solid #e5e8ee',
+                      boxShadow: '0 16px 40px -16px rgb(21 27 38 / 0.35)',
                       fontSize: 12,
                     }}
                     labelFormatter={(d) => formatDay(String(d), { month: 'long' })}
@@ -237,7 +237,7 @@ export default function ReportsPage() {
                   />
                   <Bar
                     dataKey={metric}
-                    fill="#173d32"
+                    fill="#526ff5"
                     radius={[3, 3, 0, 0]}
                     maxBarSize={28}
                     isAnimationActive={false}
@@ -268,7 +268,7 @@ export default function ReportsPage() {
                         <p className="font-semibold">{s.name}</p>
                         <div className="mt-1.5 h-1 rounded-full bg-subtle">
                           <div
-                            className="h-full rounded-full bg-success"
+                            className="h-full rounded-full bg-night-3"
                             style={{
                               width: `${(s.appointments / report.services[0].appointments) * 100}%`,
                             }}
@@ -296,7 +296,7 @@ export default function ReportsPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-3">
                           <p className="truncate font-semibold">{o.name}</p>
-                          <p className="tabular text-sm font-bold">
+                          <p className="tabular text-sm font-medium">
                             {formatPrice(report.revenueByStaff.get(o.staffId) ?? 0)}
                           </p>
                         </div>
@@ -307,7 +307,7 @@ export default function ReportsPage() {
                               style={{ width: `${Math.round((o.rate ?? 0) * 100)}%` }}
                             />
                           </div>
-                          <span className="tabular w-10 text-right text-xs font-semibold text-ink-soft">
+                          <span className="tabular w-10 text-right text-xs font-medium text-ink-soft">
                             {formatPercent(o.rate)}
                           </span>
                         </div>
@@ -341,7 +341,7 @@ export default function ReportsPage() {
                         />
                         {STATUS_LABELS[s]}
                       </span>
-                      <span className="tabular font-bold">{report.counts[s]}</span>
+                      <span className="tabular font-medium">{report.counts[s]}</span>
                     </li>
                   ))}
                 </ul>

@@ -136,7 +136,7 @@ export default function ClientsPage() {
         </div>
         {clients.data && (
           <p className="text-[13px] text-muted">
-            <span className="font-bold text-ink">{clients.data.length}</span>{' '}
+            <span className="font-semibold text-ink">{clients.data.length}</span>{' '}
             {clients.data.length === 1 ? 'client' : 'clients'}
           </p>
         )}
@@ -315,7 +315,7 @@ function ClientProfile({ clientId, onEdit }: { clientId: string; onEdit: () => v
         ].map(([label, value]) => (
           <div key={label as string} className="bg-surface px-3 py-3">
             <dt className="eyebrow">{label}</dt>
-            <dd className="tabular mt-1 text-base font-bold">{value}</dd>
+            <dd className="tabular mt-1 text-base font-medium">{value}</dd>
           </div>
         ))}
       </dl>

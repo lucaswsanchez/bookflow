@@ -91,7 +91,7 @@ export default function StaffPage() {
                 <div className="flex items-center gap-3">
                   <Avatar name={s.name} color={s.color} size="lg" />
                   <div className="min-w-0">
-                    <p className="flex items-center gap-2 font-bold">
+                    <p className="flex items-center gap-2 font-semibold">
                       <span className="truncate">{s.name}</span>
                       {!s.active && <Badge>Inactive</Badge>}
                     </p>
@@ -122,12 +122,12 @@ export default function StaffPage() {
                         key={d}
                         className={clsx(
                           'min-h-16 rounded-md px-1.5 py-2 text-center',
-                          ranges.length ? 'bg-success-50' : 'hatch',
+                          ranges.length ? 'border border-line bg-surface' : 'hatch',
                         )}
                       >
                         <p
                           className={clsx(
-                            'text-[11px] font-bold',
+                            'text-[11px] font-semibold',
                             ranges.length ? 'text-accent-ink' : 'text-faint',
                           )}
                         >

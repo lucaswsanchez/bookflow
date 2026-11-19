@@ -114,7 +114,7 @@ export default function AgendaPage() {
           <div className="flex items-center gap-2">
             <span
               className={clsx(
-                'grid size-7 place-items-center rounded-full text-[13px] font-bold tabular',
+                'grid size-7 place-items-center rounded-full text-[13px] font-semibold tabular',
                 d === today ? 'bg-accent text-white' : 'text-ink',
               )}
             >

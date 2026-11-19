@@ -338,7 +338,7 @@ function Step({
             <ArrowLeft className="size-4" aria-hidden />
           </IconButton>
         )}
-        <h2 id={`${testId}-title`} className="text-xl font-bold tracking-tight">
+        <h2 id={`${testId}-title`} className="text-xl font-semibold tracking-tight">
           {title}
         </h2>
       </div>
@@ -434,7 +434,7 @@ function SummaryPanel({ service, staff, slot, tz }: SummaryProps) {
       </dl>
       <div className="flex items-baseline justify-between border-t border-line bg-canvas/60 px-5 py-4">
         <span className="text-sm text-muted">Total</span>
-        <span className="tabular text-lg font-bold">
+        <span className="tabular text-lg font-semibold">
           {service ? (
             formatPrice(service.price)
           ) : (
@@ -468,7 +468,7 @@ function Confirmation({ booking, onRestart }: { booking: BookingSummary; onResta
         <div className="border-b border-dashed border-line-strong px-6 py-5 text-center">
           <p className="eyebrow">Booking code</p>
           <p
-            className="mt-1 font-mono text-[28px] font-bold tracking-[0.18em] text-accent-ink"
+            className="mt-1 font-mono text-[28px] font-semibold tracking-[0.18em] text-accent-ink"
             data-testid="booking-code"
           >
             {booking.code}
