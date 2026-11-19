@@ -170,7 +170,7 @@ export default function ServicesPage() {
                           )}
                         </Td>
                         <Td>
-                          {s.active ? <Badge tone="forest">Bookable</Badge> : <Badge>Hidden</Badge>}
+                          {s.active ? <Badge tone="accent">Bookable</Badge> : <Badge>Hidden</Badge>}
                         </Td>
                         <Td>{actions(s)}</Td>
                       </tr>
@@ -207,7 +207,7 @@ export default function ServicesPage() {
                         {formatDuration(s.durationMinutes)}
                       </span>
                       {people.length > 0 && <AvatarStack people={people} />}
-                      {s.active ? <Badge tone="forest">Bookable</Badge> : <Badge>Hidden</Badge>}
+                      {s.active ? <Badge tone="accent">Bookable</Badge> : <Badge>Hidden</Badge>}
                       <span className="ml-auto">{actions(s)}</span>
                     </div>
                   </li>
@@ -335,7 +335,7 @@ function ServiceForm({ service, onDone }: { service: Service | null; onDone: () 
           {save.error.message}
         </p>
       )}
-      <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-[#fbfaf7] px-5 py-3">
+      <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-canvas px-5 py-3">
         <Button type="button" variant="secondary" onClick={onDone}>
           Cancel
         </Button>

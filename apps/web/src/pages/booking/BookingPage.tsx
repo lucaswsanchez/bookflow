@@ -161,14 +161,14 @@ export default function BookingPage() {
   return (
     <PageShell>
       <header className="pt-4 pb-8 sm:pt-8 sm:pb-10" data-testid="booking-header">
-        {place && <p className="eyebrow mb-4 text-moss">{place}</p>}
+        {place && <p className="eyebrow mb-4 text-accent-ink">{place}</p>}
         <BusinessMark
           name={b.name}
           size="lg"
           className="size-12! text-xl! sm:size-14! sm:text-2xl!"
         />
         <h1
-          className="mt-5 font-display text-[30px] leading-[1.05] text-forest sm:text-[44px]"
+          className="mt-5 font-sans font-semibold tracking-tight text-[30px] leading-[1.05] text-accent-ink sm:text-[44px]"
           data-testid="business-name"
         >
           {name}
@@ -183,7 +183,7 @@ export default function BookingPage() {
             </span>
           )}
           {b.phone && (
-            <a href={`tel:${b.phone}`} className="flex items-center gap-1.5 hover:text-forest">
+            <a href={`tel:${b.phone}`} className="flex items-center gap-1.5 hover:text-accent-ink">
               <Phone className="size-3.5" aria-hidden /> {b.phone}
             </a>
           )}
@@ -301,7 +301,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
         <Link to="/" aria-label="BookFlow home" className="opacity-80 hover:opacity-100">
           <Logo />
         </Link>
-        <Link to="/login" className="text-[13px] font-semibold text-ink-soft hover:text-forest">
+        <Link to="/login" className="text-[13px] font-semibold text-ink-soft hover:text-accent-ink">
           Staff login
         </Link>
       </nav>
@@ -454,10 +454,10 @@ function Confirmation({ booking, onRestart }: { booking: BookingSummary; onResta
       className="mx-auto max-w-md animate-rise py-6 text-center sm:py-12"
       data-testid="booking-confirmation"
     >
-      <span className="mx-auto grid size-14 place-items-center rounded-full bg-forest text-sand">
+      <span className="mx-auto grid size-14 place-items-center rounded-full bg-accent text-signal">
         <Check className="size-7" strokeWidth={2.5} aria-hidden />
       </span>
-      <h1 className="mt-6 font-display text-[36px] leading-tight text-forest">
+      <h1 className="mt-6 font-sans font-semibold tracking-tight text-[36px] leading-tight text-accent-ink">
         You’re booked, {booking.clientName.split(' ')[0]}.
       </h1>
       <p className="mt-2 text-sm text-muted">
@@ -468,7 +468,7 @@ function Confirmation({ booking, onRestart }: { booking: BookingSummary; onResta
         <div className="border-b border-dashed border-line-strong px-6 py-5 text-center">
           <p className="eyebrow">Booking code</p>
           <p
-            className="mt-1 font-mono text-[28px] font-bold tracking-[0.18em] text-forest"
+            className="mt-1 font-mono text-[28px] font-bold tracking-[0.18em] text-accent-ink"
             data-testid="booking-code"
           >
             {booking.code}

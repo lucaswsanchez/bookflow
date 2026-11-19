@@ -29,15 +29,16 @@ import {
 import type { AppointmentStatus } from '../../lib/types';
 
 const SWATCHES = [
-  ['canvas', '#F7F6F2', 'Background'],
-  ['surface', '#FFFFFF', 'Surfaces'],
-  ['forest', '#173D32', 'Primary'],
-  ['moss', '#54856B', 'Secondary'],
-  ['sage', '#A4B99C', 'Soft accent'],
-  ['sand', '#D8BFA5', 'Warm accent'],
-  ['ink', '#202923', 'Text'],
-  ['muted', '#758078', 'Secondary text'],
-  ['line', '#E8E9E3', 'Borders'],
+  ['night', '#151B26', 'Navigation, dark panels'],
+  ['night-2', '#202A38', 'Raised dark surfaces'],
+  ['canvas', '#F6F7F9', 'Paper background'],
+  ['surface', '#FFFFFF', 'Content surfaces'],
+  ['accent', '#526FF5', 'Actions, focus, selection'],
+  ['signal', '#F0B65C', 'Now, attention'],
+  ['success', '#1F8A62', 'Completed'],
+  ['ink', '#202632', 'Text'],
+  ['muted', '#778191', 'Secondary text'],
+  ['line', '#E5E8EE', 'Borders'],
 ] as const;
 
 const STATUSES: AppointmentStatus[] = ['CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'];
@@ -72,19 +73,22 @@ export default function UiShowcasePage() {
             <BusinessMark name="Estudio Kine Norte" size="sm" />
           </Row>
           <Row label="Display">
-            <p className="font-display text-4xl text-forest">Book your next visit</p>
+            <p className="text-4xl font-semibold tracking-[-0.035em]">Book your next visit</p>
           </Row>
           <Row label="Headings">
             <div className="space-y-1">
-              <p className="text-[26px] font-bold tracking-tight">Page title · 26 / bold</p>
-              <p className="text-[15px] font-bold">Section title · 15 / bold</p>
+              <p className="text-[22px] font-semibold tracking-[-0.02em]">
+                Page title · Geist 22 / semibold
+              </p>
+              <p className="text-[14px] font-semibold">Section title · 14 / semibold</p>
               <p className="text-sm">Body · 14 / regular</p>
               <p className="text-[13px] text-muted">Secondary · 13 / muted</p>
-              <p className="eyebrow">Eyebrow · 11 / caps</p>
+              <p className="eyebrow">Eyebrow · Geist Mono 10.5 / caps</p>
+              <p className="tabular text-sm">Data · Geist Mono · 09:30 · $ 12.000 · BF-7K2Q</p>
             </div>
           </Row>
           <Row label="Palette">
-            <div className="grid w-full grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-9">
+            <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-5">
               {SWATCHES.map(([token, hex, use]) => (
                 <div key={token}>
                   <div
@@ -184,13 +188,13 @@ export default function UiShowcasePage() {
           </Row>
           <Row label="Badges">
             <Badge>Neutral</Badge>
-            <Badge tone="forest">Active</Badge>
-            <Badge tone="sand">Inactive</Badge>
+            <Badge tone="accent">Active</Badge>
+            <Badge tone="signal">Inactive</Badge>
             <Badge tone="danger">Overdue</Badge>
           </Row>
           <Row label="Avatars">
-            <Avatar name="Martín Acosta" color="#173d32" size="sm" />
-            <Avatar name="Lucía Benítez" color="#54856b" />
+            <Avatar name="Martín Acosta" color="#526ff5" size="sm" />
+            <Avatar name="Lucía Benítez" color="#c47a1c" />
             <Avatar name="Diego Ramírez" color="#b08a63" size="lg" />
           </Row>
           <Row label="Stats">

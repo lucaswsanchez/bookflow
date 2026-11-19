@@ -24,7 +24,7 @@ import type { Service, StaffMember, WorkingHours } from '../../lib/types';
 
 // Monday-first order for display
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
-const PALETTE = ['#2f6b55', '#b07a4f', '#5b7c99', '#8a6f9e', '#a8553f', '#6b7d3a', '#3f6e78'];
+const PALETTE = ['#526ff5', '#c47a1c', '#1f8a62', '#7c5cdb', '#cf4f3f', '#0e8fa8', '#5b6474'];
 
 const hoursFor = (hours: WorkingHours[] = [], weekday: number) =>
   hours.filter((h) => h.weekday === weekday).sort((a, b) => a.startMinute - b.startMinute);
@@ -122,13 +122,13 @@ export default function StaffPage() {
                         key={d}
                         className={clsx(
                           'min-h-16 rounded-md px-1.5 py-2 text-center',
-                          ranges.length ? 'bg-sage-50' : 'hatch',
+                          ranges.length ? 'bg-success-50' : 'hatch',
                         )}
                       >
                         <p
                           className={clsx(
                             'text-[11px] font-bold',
-                            ranges.length ? 'text-moss' : 'text-faint',
+                            ranges.length ? 'text-accent-ink' : 'text-faint',
                           )}
                         >
                           {WEEKDAYS[d].slice(0, 3)}
@@ -398,7 +398,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
                 ))}
                 <button
                   type="button"
-                  className="ml-auto text-xs font-semibold text-forest hover:underline"
+                  className="ml-auto text-xs font-semibold text-accent-ink hover:underline"
                   onClick={() =>
                     setRanges([
                       ...ranges,
@@ -427,7 +427,7 @@ function StaffForm({ staff, onDone }: { staff: StaffMember | null; onDone: () =>
           {error}
         </p>
       )}
-      <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-[#fbfaf7] px-5 py-3">
+      <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex justify-end gap-2 border-t border-line bg-canvas px-5 py-3">
         <Button type="button" variant="secondary" onClick={onDone}>
           Cancel
         </Button>

@@ -21,8 +21,9 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'destructive' | 's
 type Size = 'sm' | 'md' | 'lg';
 
 const BUTTON_VARIANTS: Record<Variant, string> = {
-  primary: 'bg-forest text-white hover:bg-forest-deep shadow-soft',
-  secondary: 'border border-line-strong bg-surface text-ink hover:border-faint hover:bg-subtle',
+  primary: 'bg-accent text-white hover:bg-accent-deep shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]',
+  secondary:
+    'border border-line-strong bg-surface text-ink shadow-soft hover:border-faint hover:bg-canvas',
   subtle: 'bg-subtle text-ink hover:bg-line',
   ghost: 'text-ink-soft hover:bg-subtle hover:text-ink',
   danger: 'border border-danger-100 bg-surface text-danger hover:bg-danger-50',
@@ -31,8 +32,8 @@ const BUTTON_VARIANTS: Record<Variant, string> = {
 
 const BUTTON_SIZES: Record<Size, string> = {
   sm: 'h-8 px-3 text-[13px]',
-  md: 'h-10 px-4 text-sm',
-  lg: 'h-12 px-5 text-[15px]',
+  md: 'h-9 px-3.5 text-sm',
+  lg: 'h-11 px-5 text-[15px]',
 };
 
 export const Button = forwardRef<
@@ -52,7 +53,7 @@ export const Button = forwardRef<
       type={type ?? 'button'}
       disabled={disabled || loading}
       className={clsx(
-        'inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-semibold whitespace-nowrap transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-55',
+        'inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-55',
         BUTTON_SIZES[size],
         BUTTON_VARIANTS[variant],
         className,
@@ -77,7 +78,7 @@ export const IconButton = forwardRef<
       title={label}
       className={clsx(
         'inline-flex shrink-0 items-center justify-center rounded-md text-ink-soft transition-colors hover:bg-subtle hover:text-ink disabled:opacity-50',
-        size === 'sm' ? 'size-8' : 'size-10',
+        size === 'sm' ? 'size-8' : 'size-9',
         className,
       )}
       {...props}
@@ -122,9 +123,9 @@ export function Section({
 }) {
   return (
     <section className={className} data-testid={testId}>
-      <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-2.5">
+      <div className="mb-3 flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-bold text-ink">{title}</h2>
+          <h2 className="text-[14px] font-semibold text-ink">{title}</h2>
           {description && <p className="mt-0.5 text-[13px] text-muted">{description}</p>}
         </div>
         {action}
@@ -141,12 +142,14 @@ export function Stat({
   hint,
   testId,
   tone = 'default',
+  size = 'md',
 }: {
   label: string;
   value: ReactNode;
   hint?: ReactNode;
   testId?: string;
   tone?: 'default' | 'accent';
+  size?: 'md' | 'lg';
 }) {
   return (
     <div className="min-w-0">
@@ -154,8 +157,9 @@ export function Stat({
       <p
         data-testid={testId}
         className={clsx(
-          'tabular mt-2 truncate text-[28px] leading-none font-bold tracking-tight',
-          tone === 'accent' ? 'text-forest' : 'text-ink',
+          'tabular mt-2 truncate leading-none font-medium',
+          size === 'lg' ? 'text-[34px]' : 'text-[22px]',
+          tone === 'accent' ? 'text-accent-ink' : 'text-ink',
         )}
       >
         {value}
@@ -177,11 +181,13 @@ export function PageHeader({
   eyebrow?: string;
 }) {
   return (
-    <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
-        <h1 className="text-[26px] leading-tight font-bold tracking-tight text-ink">{title}</h1>
-        {description && <p className="mt-1.5 text-sm text-muted">{description}</p>}
+        {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
+        <h1 className="text-[22px] leading-tight font-semibold tracking-[-0.02em] text-ink">
+          {title}
+        </h1>
+        {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </header>
@@ -265,10 +271,10 @@ const hasWidth = (className?: string) => /(^|\s)(w-|min-w-|max-w-)/.test(classNa
 const control = (invalid?: boolean, className?: string) =>
   clsx(
     !hasWidth(className) && 'w-full',
-    'rounded-md border bg-surface px-3 text-sm text-ink transition-colors placeholder:text-faint focus:outline-none focus:ring-3 disabled:bg-subtle disabled:text-muted',
+    'rounded-md border bg-surface px-3 text-sm text-ink shadow-soft transition-colors placeholder:text-faint focus:outline-none focus:ring-3 disabled:bg-subtle disabled:text-muted',
     invalid
       ? 'border-danger focus:ring-danger-100'
-      : 'border-line-strong hover:border-faint focus:border-forest focus:ring-forest-100',
+      : 'border-line-strong hover:border-faint focus:border-accent focus:ring-accent-100',
   );
 
 export const Input = forwardRef<
@@ -279,7 +285,7 @@ export const Input = forwardRef<
     <input
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={clsx(control(invalid, className), 'h-10', className)}
+      className={clsx(control(invalid, className), 'h-9', className)}
       {...props}
     />
   );
@@ -309,7 +315,7 @@ export const Select = forwardRef<
       aria-invalid={invalid || undefined}
       className={clsx(
         control(invalid, className),
-        'h-10 appearance-none bg-[url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2016%2016%27%20fill=%27none%27%20stroke=%27%23758078%27%20stroke-width=%271.6%27%3E%3Cpath%20d=%27m4%206%204%204%204-4%27/%3E%3C/svg%3E")] bg-[length:16px] bg-[right_10px_center] bg-no-repeat pr-9',
+        'h-9 appearance-none bg-[url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2016%2016%27%20fill=%27none%27%20stroke=%27%23778191%27%20stroke-width=%271.6%27%3E%3Cpath%20d=%27m4%206%204%204%204-4%27/%3E%3C/svg%3E")] bg-[length:16px] bg-[right_10px_center] bg-no-repeat pr-9',
         className,
       )}
       {...props}
@@ -338,7 +344,7 @@ export function Field({
     <div className="space-y-1.5">
       <label
         htmlFor={htmlFor}
-        className="flex items-baseline gap-1.5 text-[13px] font-semibold text-ink"
+        className="flex items-baseline gap-1.5 text-[13px] font-medium text-ink"
       >
         {label}
         {optional && <span className="text-xs font-normal text-faint">Optional</span>}
@@ -364,7 +370,7 @@ export function Checkbox({
     <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink">
       <input
         type="checkbox"
-        className="mt-0.5 size-4 shrink-0 cursor-pointer rounded-sm border-line-strong accent-forest"
+        className="mt-0.5 size-4 shrink-0 cursor-pointer rounded-sm border-line-strong accent-accent"
         {...props}
       />
       <span>
@@ -388,7 +394,11 @@ export function Segmented<T extends string>({
   label: string;
 }) {
   return (
-    <div role="group" aria-label={label} className="inline-flex rounded-md bg-subtle p-0.5">
+    <div
+      role="group"
+      aria-label={label}
+      className="inline-flex rounded-md border border-line bg-subtle p-0.5"
+    >
       {options.map((o) => (
         <button
           key={o.value}
@@ -397,8 +407,10 @@ export function Segmented<T extends string>({
           data-testid={o.testId}
           onClick={() => onChange(o.value)}
           className={clsx(
-            'h-8 rounded-[5px] px-3 text-[13px] font-semibold transition-colors',
-            value === o.value ? 'bg-surface text-ink shadow-soft' : 'text-muted hover:text-ink',
+            'h-7 rounded-[5px] px-3 text-[13px] font-medium transition-colors',
+            value === o.value
+              ? 'bg-surface text-ink shadow-[0_1px_2px_rgb(21_27_38/0.14)]'
+              : 'text-muted hover:text-ink',
           )}
         >
           {o.label}
@@ -417,7 +429,7 @@ export function StatusBadge({ status }: { status: AppointmentStatus }) {
     <span
       data-testid="status-badge"
       className={clsx(
-        'inline-flex items-center gap-1.5 rounded-sm px-1.5 py-0.5 text-xs font-semibold',
+        'inline-flex items-center gap-1.5 rounded-sm px-1.5 py-0.5 text-xs font-medium',
         STATUS_TONES[status].badge,
       )}
     >
@@ -432,15 +444,15 @@ export function Badge({
   tone = 'neutral',
 }: {
   children: ReactNode;
-  tone?: 'neutral' | 'forest' | 'sand' | 'danger';
+  tone?: 'neutral' | 'accent' | 'signal' | 'danger';
 }) {
   return (
     <span
       className={clsx(
-        'inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs font-semibold',
+        'inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs font-medium',
         tone === 'neutral' && 'bg-subtle text-ink-soft',
-        tone === 'forest' && 'bg-forest-50 text-forest',
-        tone === 'sand' && 'bg-sand-50 text-sand-700',
+        tone === 'accent' && 'bg-accent-50 text-accent-ink',
+        tone === 'signal' && 'bg-signal-50 text-signal-700',
         tone === 'danger' && 'bg-danger-50 text-danger',
       )}
     >
@@ -471,13 +483,13 @@ export function Avatar({
     <span
       aria-hidden
       className={clsx(
-        'grid shrink-0 place-items-center rounded-full font-bold text-white',
+        'grid shrink-0 place-items-center rounded-full font-semibold text-white',
         size === 'sm' && 'size-6 text-[10px]',
         size === 'md' && 'size-8 text-xs',
         size === 'lg' && 'size-11 text-sm',
         className,
       )}
-      style={{ backgroundColor: color ?? '#54856b' }}
+      style={{ backgroundColor: color ?? '#526ff5' }}
     >
       {initials}
     </span>
@@ -509,7 +521,12 @@ export function Table({
   fit?: boolean;
 }) {
   return (
-    <div className={clsx('overflow-x-auto rounded-lg border border-line bg-surface', className)}>
+    <div
+      className={clsx(
+        'overflow-x-auto rounded-lg border border-line bg-surface shadow-soft',
+        className,
+      )}
+    >
       <table
         className={clsx(
           'w-full border-collapse text-sm [&_tbody_tr:last-child>td]:border-b-0',
@@ -526,10 +543,7 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
   return (
     <th
       scope="col"
-      className={clsx(
-        'eyebrow border-b border-line bg-canvas/50 px-4 py-2.5 text-left font-semibold',
-        className,
-      )}
+      className={clsx('eyebrow h-9 border-b border-line bg-canvas px-4 text-left', className)}
     >
       {children}
     </th>
@@ -538,7 +552,7 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
 
 export function Td({ children, className }: { children?: ReactNode; className?: string }) {
   return (
-    <td className={clsx('border-b border-line px-4 py-3 align-middle', className)}>{children}</td>
+    <td className={clsx('border-b border-line px-4 py-2.5 align-middle', className)}>{children}</td>
   );
 }
 
@@ -550,10 +564,10 @@ export function Td({ children, className }: { children?: ReactNode; className?: 
 export function LogoMark({ inverted, className }: { inverted?: boolean; className?: string }) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden className={clsx('size-7 shrink-0', className)}>
-      <rect width="64" height="64" rx="12" fill={inverted ? '#f7f6f2' : '#173d32'} />
-      <rect x="14" y="15" width="22" height="9" rx="2" fill={inverted ? '#54856b' : '#a4b99c'} />
-      <rect x="14" y="28" width="36" height="9" rx="2" fill="#d8bfa5" />
-      <rect x="28" y="41" width="22" height="9" rx="2" fill={inverted ? '#173d32' : '#f7f6f2'} />
+      <rect width="64" height="64" rx="14" fill={inverted ? '#2a3546' : '#151b26'} />
+      <rect x="14" y="15" width="22" height="9" rx="2.5" fill="#526ff5" />
+      <rect x="14" y="28" width="36" height="9" rx="2.5" fill="#d5dbe5" />
+      <rect x="28" y="41" width="22" height="9" rx="2.5" fill="#f0b65c" />
     </svg>
   );
 }
@@ -562,7 +576,7 @@ export function Logo({ className, inverted }: { className?: string; inverted?: b
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-2 text-[15px] font-extrabold tracking-tight',
+        'inline-flex items-center gap-2 text-[15px] font-semibold tracking-[-0.02em]',
         inverted ? 'text-white' : 'text-ink',
         className,
       )}
@@ -598,7 +612,7 @@ export function BusinessMark({
     <span
       aria-hidden
       className={clsx(
-        'grid shrink-0 place-items-center rounded-md bg-forest font-display text-sand',
+        'grid shrink-0 place-items-center rounded-md bg-night font-mono font-medium text-signal',
         size === 'sm' && 'size-8 text-sm',
         size === 'md' && 'size-10 text-lg',
         size === 'lg' && 'size-14 text-2xl',
@@ -652,7 +666,7 @@ export function Modal({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex animate-fade-in items-end justify-center bg-ink/35 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex animate-fade-in items-end justify-center bg-night/45 sm:items-center sm:p-4"
       onMouseDown={onClose}
     >
       <div
@@ -670,7 +684,7 @@ export function Modal({
       >
         <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
           <div className="min-w-0">
-            <h2 id={`${testId}-title`} className="text-base font-bold text-ink">
+            <h2 id={`${testId}-title`} className="text-[15px] font-semibold text-ink">
               {title}
             </h2>
             {description && <p className="mt-0.5 text-[13px] text-muted">{description}</p>}
@@ -681,7 +695,7 @@ export function Modal({
         </div>
         <div className="overflow-y-auto px-5 py-5">{children}</div>
         {footer && (
-          <div className="flex flex-wrap justify-end gap-2 border-t border-line bg-canvas/60 px-5 py-3">
+          <div className="flex flex-wrap justify-end gap-2 border-t border-line bg-canvas px-5 py-3">
             {footer}
           </div>
         )}

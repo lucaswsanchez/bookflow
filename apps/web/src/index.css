@@ -1,57 +1,66 @@
 @import 'tailwindcss';
 
 /*
- * BookFlow design tokens.
- * Warm paper background, deep forest green as the single strong accent, sage and sand as
- * supporting tones. Everything else is ink on paper with hairline borders.
+ * BookFlow design tokens — "modern scheduling workspace".
+ * Ink/slate structure (navigation, dark panels), paper content, one electric-blue accent for
+ * actions and selection, amber reserved for "now" and things that need attention.
+ * Geist for interface text, Geist Mono for times, prices, codes and identifiers.
  */
 @theme {
   --font-sans:
-    'Manrope Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'DM Serif Display', ui-serif, Georgia, serif;
+    'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
-  --color-canvas: #f7f6f2;
+  /* Light content */
+  --color-canvas: #f6f7f9;
   --color-surface: #ffffff;
-  --color-subtle: #f1f0ea;
-  --color-line: #e8e9e3;
-  --color-line-strong: #d6d8cf;
+  --color-subtle: #eff1f5;
+  --color-line: #e5e8ee;
+  --color-line-strong: #d3d8e1;
 
-  --color-ink: #202923;
-  --color-ink-soft: #3d4740;
-  --color-muted: #758078;
-  --color-faint: #a3aaa4;
+  --color-ink: #202632;
+  --color-ink-soft: #3b4352;
+  --color-muted: #778191;
+  --color-faint: #a7afbb;
 
-  --color-forest: #173d32;
-  --color-forest-deep: #0f2c24;
-  --color-forest-50: #edf3ef;
-  --color-forest-100: #dbe7df;
+  /* Dark structure */
+  --color-night: #151b26;
+  --color-night-2: #202a38;
+  --color-night-3: #2a3546;
+  --color-night-line: #283244;
+  --color-night-text: #d5dbe5;
+  --color-night-muted: #8a94a6;
 
-  --color-moss: #54856b;
-  --color-moss-50: #eaf1ec;
+  /* Accent: actions, focus, selection */
+  --color-accent: #526ff5;
+  --color-accent-deep: #3d58db;
+  --color-accent-ink: #2f47c0;
+  --color-accent-50: #eff2fe;
+  --color-accent-100: #dde3fd;
 
-  --color-sage: #a4b99c;
-  --color-sage-50: #f0f4ee;
-  --color-sage-100: #e2eadd;
+  /* Signal: now-line, attention */
+  --color-signal: #f0b65c;
+  --color-signal-50: #fdf6ea;
+  --color-signal-100: #fbe9c9;
+  --color-signal-700: #8a5a12;
 
-  --color-sand: #d8bfa5;
-  --color-sand-50: #f8f2ec;
-  --color-sand-100: #f1e6da;
-  --color-sand-700: #8a6440;
+  --color-success: #1f8a62;
+  --color-success-50: #e9f6f0;
 
-  --color-danger: #a8432f;
-  --color-danger-50: #f8ebe7;
-  --color-danger-100: #f0d5ce;
+  --color-danger: #c8412f;
+  --color-danger-50: #fcefec;
+  --color-danger-100: #f6d6cf;
 
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 10px;
 
-  --shadow-soft: 0 1px 2px rgb(32 41 35 / 0.04), 0 1px 1px rgb(32 41 35 / 0.03);
-  --shadow-pop: 0 12px 32px -12px rgb(23 61 50 / 0.25), 0 2px 6px rgb(32 41 35 / 0.06);
+  --shadow-soft: 0 1px 2px rgb(21 27 38 / 0.05);
+  --shadow-pop: 0 16px 40px -16px rgb(21 27 38 / 0.35), 0 2px 6px rgb(21 27 38 / 0.08);
 
-  --animate-fade-in: fade-in 160ms ease-out;
-  --animate-rise: rise 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-fade-in: fade-in 140ms ease-out;
+  --animate-rise: rise 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 
   @keyframes fade-in {
     from {
@@ -79,13 +88,12 @@
   }
   body {
     @apply bg-canvas text-ink antialiased;
-    font-feature-settings: 'ss01', 'cv11';
   }
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-forest;
+    @apply outline-2 outline-offset-2 outline-accent;
   }
   ::selection {
-    @apply bg-sage-100 text-forest;
+    @apply bg-accent-100 text-accent-ink;
   }
 }
 
@@ -95,7 +103,7 @@
   background-image: repeating-linear-gradient(
     135deg,
     transparent 0 6px,
-    rgb(32 41 35 / 0.06) 6px 7px
+    rgb(32 38 50 / 0.06) 6px 7px
   );
 }
 
@@ -106,12 +114,16 @@
   }
 }
 
+/* Times, prices and codes: mono with tabular figures. */
 @utility tabular {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 @utility eyebrow {
-  @apply text-[11px] font-semibold tracking-[0.08em] text-muted uppercase;
+  font-family: var(--font-mono);
+  @apply text-[10.5px] font-medium tracking-[0.08em] text-muted uppercase;
 }
 
 @media (prefers-reduced-motion: reduce) {

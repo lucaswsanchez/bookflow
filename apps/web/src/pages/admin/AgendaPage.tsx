@@ -115,7 +115,7 @@ export default function AgendaPage() {
             <span
               className={clsx(
                 'grid size-7 place-items-center rounded-full text-[13px] font-bold tabular',
-                d === today ? 'bg-forest text-white' : 'text-ink',
+                d === today ? 'bg-accent text-white' : 'text-ink',
               )}
             >
               {Number(d.slice(8))}
@@ -217,7 +217,7 @@ export default function AgendaPage() {
               value={date}
               onChange={(e) => e.target.value && setDate(e.target.value)}
               data-testid="agenda-date-input"
-              className="h-8 rounded-md border border-line-strong bg-surface px-2 text-[13px] text-ink-soft hover:border-faint focus:border-forest focus:ring-3 focus:ring-forest-100 focus:outline-none"
+              className="h-8 rounded-md border border-line-strong bg-surface px-2 text-[13px] text-ink-soft hover:border-faint focus:border-accent focus:ring-3 focus:ring-accent-100 focus:outline-none"
             />
           </label>
           {isAdmin && (
@@ -305,13 +305,13 @@ export default function AgendaPage() {
                     className={clsx(
                       'flex shrink-0 items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-[13px] font-semibold transition-colors',
                       selectedTab
-                        ? 'border-forest bg-forest text-white'
+                        ? 'border-accent bg-accent text-white'
                         : 'border-line-strong bg-surface text-ink-soft',
                     )}
                   >
                     {member && <Avatar name={member.name} color={member.color} size="sm" />}
                     {member?.name.split(' ')[0]}
-                    <span className={selectedTab ? 'text-sage' : 'text-faint'}>
+                    <span className={selectedTab ? 'text-night-muted' : 'text-faint'}>
                       {countActive(c.items)}
                     </span>
                   </button>
@@ -431,7 +431,7 @@ function TimeGrid({
                 className={clsx(
                   'sticky top-0 z-10 flex h-14 items-center border-b border-line px-3',
                   col.date === today && columns.length > 1 && !showStaff
-                    ? 'bg-forest-50/60'
+                    ? 'bg-accent-50/60'
                     : 'bg-surface',
                 )}
               >

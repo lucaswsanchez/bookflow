@@ -1,5 +1,5 @@
-import '@fontsource-variable/manrope';
-import '@fontsource/dm-serif-display/400.css';
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';

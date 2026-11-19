@@ -19,6 +19,7 @@ const ReportsPage = lazy(() => import('./pages/admin/ReportsPage'));
 const ServicesPage = lazy(() => import('./pages/admin/ServicesPage'));
 const StaffPage = lazy(() => import('./pages/admin/StaffPage'));
 const ClientsPage = lazy(() => import('./pages/admin/ClientsPage'));
+const SettingsPage = lazy(() => import('./pages/admin/SettingsPage'));
 const UiShowcasePage = lazy(() => import('./pages/admin/UiShowcasePage'));
 
 const queryClient = new QueryClient({
@@ -38,7 +39,7 @@ function NotFound() {
     <main className="grid min-h-screen place-items-center px-4 text-center">
       <div>
         <p className="eyebrow">Error 404</p>
-        <h1 className="mt-3 font-display text-5xl text-forest">Page not found</h1>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.03em] text-ink">Page not found</h1>
         <p className="mt-3 text-sm text-muted">The page you are looking for doesn’t exist.</p>
         <Link
           to="/"
@@ -88,6 +89,14 @@ export default function App() {
                 }
               />
               <Route path="ui" element={<UiShowcasePage />} />
+              <Route
+                path="settings"
+                element={
+                  <RequireAuth roles={['ADMIN']}>
+                    <SettingsPage />
+                  </RequireAuth>
+                }
+              />
               <Route
                 path="services"
                 element={
