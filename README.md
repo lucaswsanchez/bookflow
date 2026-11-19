@@ -14,12 +14,13 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-2D3748?logo=prisma&logoColor=white)
 
-### [🚀 Live Demo](__WEB_URL__) &nbsp;·&nbsp; [📘 API Docs (Swagger)](__API_URL__/docs) &nbsp;·&nbsp; [📋 Project Board](https://github.com/users/lucaswsanchez/projects/2)
+### [🚀 Live Demo](https://bookflow-phi-ivory.vercel.app) &nbsp;·&nbsp; [📘 API Docs (Swagger)](https://bookflow-api-f8qe.onrender.com/docs) &nbsp;·&nbsp; [📋 Project Board](https://github.com/users/lucaswsanchez/projects/2)
 
 </div>
 
-> **Try it in 30 seconds.** Open the [booking page](__WEB_URL__/book/barberia-costanera) and book
-> an appointment, or [log in](__WEB_URL__/login) with a demo account:
+> **Try it in 30 seconds.** Open the [booking page](https://bookflow-phi-ivory.vercel.app/book/barberia-costanera) and book
+> an appointment, open the [admin demo in one click](https://bookflow-phi-ivory.vercel.app/login?demo=admin),
+> or [log in](https://bookflow-phi-ivory.vercel.app/login) with a demo account:
 >
 > | Role  | Email            | Password    | Can do |
 > | ----- | ---------------- | ----------- | ------ |
@@ -184,7 +185,7 @@ pnpm dev
 | Variable | Description | Example |
 | --- | --- | --- |
 | `DATABASE_URL` | Runtime connection (Supabase: transaction pooler, port 6543, `?pgbouncer=true`) | `postgresql://…:6543/postgres?pgbouncer=true` |
-| `DIRECT_URL` | Connection for migrations and seed (Supabase: session pooler, port 5432) | `postgresql://…:5432/postgres` |
+| `DIRECT_URL` | Connection for migrations (Supabase: session pooler, port 5432) | `postgresql://…:5432/postgres` |
 | `JWT_ACCESS_SECRET` | Secret used to sign access tokens | long random string |
 | `JWT_ACCESS_TTL` | Access token lifetime in seconds | `900` |
 | `REFRESH_TOKEN_TTL_DAYS` | Refresh token lifetime in days | `7` |
