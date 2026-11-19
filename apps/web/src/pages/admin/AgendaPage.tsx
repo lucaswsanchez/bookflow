@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Download, UserX } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../auth/useAuth';
@@ -115,7 +115,7 @@ export default function AgendaPage() {
             <span
               className={clsx(
                 'grid size-7 place-items-center rounded-full text-[13px] font-semibold tabular',
-                d === today ? 'bg-accent text-white' : 'text-ink',
+                d === today ? 'bg-accent-strong text-white' : 'text-ink',
               )}
             >
               {Number(d.slice(8))}
@@ -218,16 +218,16 @@ export default function AgendaPage() {
                 value={date}
                 onChange={(e) => e.target.value && setDate(e.target.value)}
                 data-testid="agenda-date-input"
-                className="tabular h-8 rounded-md border border-line-strong bg-surface px-2 text-[12px] text-ink-soft shadow-soft hover:border-faint focus:border-accent focus:ring-3 focus:ring-accent-100 focus:outline-none"
+                className="mono h-8 rounded-md border border-line-strong bg-surface px-2 text-[12px] text-ink-soft shadow-soft hover:border-faint focus:border-accent focus:ring-3 focus:ring-accent-100 focus:outline-none"
               />
             </label>
-            {isAdmin && (
+            {isAdmin && !(phoneColumns && view === 'day') && (
               <Select
                 aria-label="Filter by professional"
                 value={staffId}
                 onChange={(e) => setStaffId(e.target.value)}
                 data-testid="agenda-staff-filter"
-                className="h-8! min-w-0 flex-1 text-[13px] xl:w-48 xl:flex-none"
+                className="h-8! min-w-32 flex-1 text-[13px] xl:w-48 xl:flex-none"
               >
                 <option value="">All staff</option>
                 {staff.data?.map((s) => (
@@ -284,6 +284,20 @@ export default function AgendaPage() {
               <span className="h-2.5 w-px bg-signal" aria-hidden />
               Now
             </li>
+            {view === 'week' && people.length > 1 && (
+              <li className="flex items-center gap-1.5">
+                <span className="flex -space-x-0.5" aria-hidden>
+                  {people.slice(0, 3).map((m) => (
+                    <span
+                      key={m.id}
+                      className="size-1.5 rounded-full ring-1 ring-canvas"
+                      style={{ backgroundColor: m.color }}
+                    />
+                  ))}
+                </span>
+                Professional
+              </li>
+            )}
           </ul>
         </div>
 
@@ -313,7 +327,7 @@ export default function AgendaPage() {
                       className={clsx(
                         'flex shrink-0 items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-[13px] font-semibold transition-colors',
                         selectedTab
-                          ? 'border-accent bg-accent text-white'
+                          ? 'border-accent bg-accent-strong text-white'
                           : 'border-line-strong bg-surface text-ink-soft',
                       )}
                     >
@@ -410,7 +424,7 @@ function TimeGrid({
             {hours.map((m) => (
               <span
                 key={m}
-                className="tabular absolute right-2 -translate-y-1/2 bg-surface px-0.5 text-[10.5px] text-muted first:translate-y-0.5"
+                className="mono absolute right-2 -translate-y-1/2 bg-surface px-0.5 text-[10.5px] text-muted first:translate-y-0.5"
                 style={{ top: y(m) }}
               >
                 {minutesToTime(m)}
@@ -527,8 +541,15 @@ function Block({
   const a = p.item;
   const short = height < 40;
   const width = 100 / p.lanes;
-  // Side-by-side blocks in the week view are too narrow for names: show time + staff dot.
+  // Side-by-side blocks in the week view are too narrow for names: show the start time only.
   const compact = dense && p.lanes > 1;
+  // A non-colour cue for finished appointments (cancelled ones are struck through).
+  const mark =
+    a.status === 'COMPLETED' ? (
+      <Check className="size-3 shrink-0" strokeWidth={2.5} aria-hidden />
+    ) : a.status === 'NO_SHOW' ? (
+      <UserX className="size-3 shrink-0" aria-hidden />
+    ) : null;
   const dot = showStaff && (
     <span
       className="size-1.5 shrink-0 rounded-full"
@@ -546,7 +567,7 @@ function Block({
       className={clsx(
         'absolute overflow-hidden rounded-[5px] border-l-[3px] text-left text-[12px] leading-tight transition-[filter,box-shadow] hover:z-10 hover:shadow-pop hover:brightness-[0.98] focus-visible:z-10',
         STATUS_TONES[a.status].block,
-        compact ? 'px-1.5 py-1' : 'px-2',
+        compact ? 'px-1 py-1 text-[11px]' : 'px-2',
         !compact && (short ? 'flex items-center gap-1.5 py-0' : 'py-1.5'),
       )}
       style={{
@@ -557,14 +578,19 @@ function Block({
       }}
     >
       {compact ? (
-        <span className="flex items-center gap-1">
-          {dot}
-          <span className="tabular font-medium">{formatTime(a.startsAt, tz)}</span>
+        <span className="block">
+          <span className="mono block font-medium tracking-[-0.04em]">
+            {formatTime(a.startsAt, tz)}
+          </span>
+          {height >= 44 && <span className="mt-0.5 block opacity-80">{mark}</span>}
           <span className="sr-only">{a.client.name}</span>
         </span>
       ) : (
         <>
-          <span className="tabular shrink-0 font-medium">{formatTime(a.startsAt, tz)}</span>
+          <span className="mono flex shrink-0 items-center gap-1 font-medium">
+            {formatTime(a.startsAt, tz)}
+            {mark}
+          </span>
           <span className={clsx('truncate font-medium', !short && 'block')}>{a.client.name}</span>
           {!short && (
             <span className="mt-0.5 flex items-center gap-1 truncate font-normal opacity-80">

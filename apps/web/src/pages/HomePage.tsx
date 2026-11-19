@@ -128,7 +128,7 @@ export default function HomePage() {
           </div>
         </nav>
 
-        <section className="mx-auto grid max-w-[1200px] gap-12 px-4 pt-10 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-10 lg:pt-16">
+        <section className="mx-auto grid max-w-[1200px] gap-12 px-4 pt-10 sm:px-6 lg:grid-cols-[minmax(0,4fr)_minmax(0,6fr)] lg:gap-12 lg:pt-16">
           <div className="lg:pt-10 lg:pb-24">
             <p className="eyebrow mb-5 text-signal">Scheduling for service businesses</p>
             <h1 className="text-[40px] leading-[1.02] font-semibold tracking-[-0.04em] text-white sm:text-[56px]">
@@ -144,39 +144,28 @@ export default function HomePage() {
               <Link
                 to={`/book/${DEMO_SLUG}`}
                 data-testid="cta-book-demo"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-accent px-5 text-[15px] font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18)] transition-colors hover:bg-accent-deep"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-accent-strong px-5 text-[15px] font-medium text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18)] transition-colors hover:bg-accent-deep"
               >
                 Try booking <ArrowRight className="size-4" aria-hidden />
               </Link>
               <Link
-                to="/login"
+                to="/login?demo=admin"
                 data-testid="cta-admin-demo"
                 className="inline-flex h-11 items-center justify-center rounded-md border border-night-line bg-night-2 px-5 text-[15px] font-medium text-white transition-colors hover:bg-night-3"
               >
                 Explore the platform
               </Link>
             </div>
-
-            <dl
-              className="mt-8 grid max-w-md grid-cols-[auto_1fr] gap-x-5 gap-y-1.5 border-t border-night-line pt-5 text-[12px]"
-              data-testid="demo-credentials"
-            >
-              <dt className="eyebrow col-span-2 mb-1 text-night-muted">Demo accounts</dt>
-              <dt className="text-night-muted">Admin</dt>
-              <dd className="font-mono text-night-text">admin@demo.com · Admin123!</dd>
-              <dt className="text-night-muted">Staff</dt>
-              <dd className="font-mono text-night-text">staff@demo.com · Staff123!</dd>
-            </dl>
           </div>
 
           {/* Real capture of the admin overview, bleeding off the right edge on desktop */}
           <figure className="relative lg:-mr-[max(0px,calc((100vw-1200px)/2))] lg:self-end">
             <div className="overflow-hidden rounded-t-xl border border-b-0 border-night-line bg-night-2 p-1.5 pb-0 lg:rounded-tr-none lg:border-r-0 lg:p-2 lg:pb-0">
               <Screen
-                src="/screens/overview.jpg"
+                src="/screens/overview-crop.jpg"
                 alt="BookFlow overview with today's revenue, a timeline of today's appointments per professional and the next bookings"
-                width={2160}
-                height={1350}
+                width={1812}
+                height={1020}
                 className="rounded-t-lg lg:rounded-tr-none"
                 eager
               />
@@ -184,6 +173,47 @@ export default function HomePage() {
           </figure>
         </section>
       </div>
+
+      {/* Live demo strip: real seed data, one click into each role */}
+      <section className="border-b border-line bg-canvas" aria-label="Live demo">
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-4 px-4 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+          <p className="text-[14px] text-ink-soft">
+            <span className="mr-2 inline-flex items-center gap-1.5 font-medium text-ink">
+              <span className="size-1.5 rounded-full bg-success" aria-hidden /> Live demo
+            </span>
+            A sample barbershop in Corrientes with demo data, ready to explore.
+          </p>
+          <dl
+            className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px]"
+            data-testid="demo-credentials"
+          >
+            <div className="flex items-center gap-2">
+              <dt className="text-muted">Admin</dt>
+              <dd className="mono text-ink-soft">admin@demo.com · Admin123!</dd>
+              <dd>
+                <Link
+                  to="/login?demo=admin"
+                  className="font-medium text-accent-ink hover:underline"
+                >
+                  Open
+                </Link>
+              </dd>
+            </div>
+            <div className="flex items-center gap-2">
+              <dt className="text-muted">Staff</dt>
+              <dd className="mono text-ink-soft">staff@demo.com · Staff123!</dd>
+              <dd>
+                <Link
+                  to="/login?demo=staff"
+                  className="font-medium text-accent-ink hover:underline"
+                >
+                  Open
+                </Link>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </section>
 
       <main>
         {/* Problem */}
@@ -197,7 +227,7 @@ export default function HomePage() {
           <ul className="divide-y divide-line border-y border-line">
             {PROBLEMS.map((p) => (
               <li key={p.label} className="grid gap-2 py-6 sm:grid-cols-[160px_1fr] sm:gap-8">
-                <span className="tabular text-[13px] text-muted">{p.label}</span>
+                <span className="mono text-[13px] text-muted">{p.label}</span>
                 <p className="text-[17px] leading-relaxed text-ink-soft">{p.text}</p>
               </li>
             ))}
@@ -214,7 +244,7 @@ export default function HomePage() {
             <ol className="grid gap-10 md:grid-cols-3 md:gap-8">
               {STEPS.map((s) => (
                 <li key={s.n} className="border-t-2 border-ink pt-5">
-                  <span className="tabular text-[13px] text-accent-ink">{s.n}</span>
+                  <span className="mono text-[13px] text-accent-ink">{s.n}</span>
                   <h3 className="mt-3 text-[19px] font-semibold tracking-[-0.02em]">{s.title}</h3>
                   <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-ink-soft">
                     {s.text}
@@ -233,17 +263,17 @@ export default function HomePage() {
           <div className="lg:sticky lg:top-10 lg:self-start">
             <p className="eyebrow mb-4">What’s inside</p>
             <h2 id="features-title" className={`max-w-md ${h2}`}>
-              Built like a real product, because it is one.
+              Everything a booking business needs, nothing it doesn’t.
             </h2>
             <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-muted">
-              A NestJS API with PostgreSQL, a React admin panel and a public booking page. Every
-              number on screen comes from real data.
+              A booking page for clients and a workspace for the team. Every number on screen comes
+              from real bookings: no spreadsheets, no manual counting.
             </p>
           </div>
           <dl className="divide-y divide-line border-y border-line">
             {FEATURES.map((f) => (
               <div key={f.tag} className="grid gap-2 py-7 sm:grid-cols-[160px_1fr] sm:gap-8">
-                <dt className="tabular text-[13px] text-accent-ink">{f.tag}</dt>
+                <dt className="mono text-[13px] text-accent-ink">{f.tag}</dt>
                 <dd>
                   <p className="text-[19px] font-semibold tracking-[-0.02em]">{f.title}</p>
                   <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{f.text}</p>
@@ -272,8 +302,8 @@ export default function HomePage() {
                   />
                 </div>
                 <figcaption className="mt-3 text-[13px] text-night-muted">
-                  <span className="tabular text-white">Agenda</span> · day and week views, one
-                  column per professional
+                  <span className="mono text-white">Agenda</span> · day and week views, one column
+                  per professional
                 </figcaption>
               </figure>
               <figure className="mx-auto w-full max-w-[280px]">
@@ -287,7 +317,7 @@ export default function HomePage() {
                   />
                 </div>
                 <figcaption className="mt-3 text-[13px] text-night-muted">
-                  <span className="tabular text-white">Booking</span> · times come from the server
+                  <span className="mono text-white">Booking</span> · times come from the server
                 </figcaption>
               </figure>
             </div>
@@ -315,7 +345,7 @@ export default function HomePage() {
 
         {/* Final CTA */}
         <section className="mx-auto max-w-[1200px] px-4 pb-20 sm:px-6">
-          <div className="flex flex-col items-start justify-between gap-6 rounded-xl bg-accent px-6 py-10 text-white sm:px-10 lg:flex-row lg:items-center">
+          <div className="flex flex-col items-start justify-between gap-6 rounded-xl bg-accent-strong px-6 py-10 text-white sm:px-10 lg:flex-row lg:items-center">
             <div>
               <h2 className="text-[26px] leading-tight font-semibold tracking-[-0.03em] sm:text-[30px]">
                 See it with real data.
@@ -332,10 +362,10 @@ export default function HomePage() {
                 Try booking <ArrowRight className="size-4" aria-hidden />
               </Link>
               <Link
-                to="/login"
+                to="/login?demo=admin"
                 className="inline-flex h-11 items-center justify-center rounded-md border border-white/30 px-5 text-[15px] font-medium text-white hover:bg-white/10"
               >
-                Log in to the demo
+                Open the admin demo
               </Link>
             </div>
           </div>

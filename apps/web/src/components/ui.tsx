@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { AlertTriangle, Inbox, Loader2, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Inbox, Loader2, X } from 'lucide-react';
 import {
   ButtonHTMLAttributes,
   forwardRef,
@@ -11,6 +11,7 @@ import {
   useRef,
 } from 'react';
 import { STATUS_LABELS, STATUS_TONES } from '../lib/status';
+import { dismissToast, useToasts } from '../lib/toast';
 import type { AppointmentStatus } from '../lib/types';
 
 /* ------------------------------------------------------------------------------------------ */
@@ -21,7 +22,8 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'destructive' | 's
 type Size = 'sm' | 'md' | 'lg';
 
 const BUTTON_VARIANTS: Record<Variant, string> = {
-  primary: 'bg-accent text-white hover:bg-accent-deep shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]',
+  primary:
+    'bg-accent-strong text-white hover:bg-accent-deep shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]',
   secondary:
     'border border-line-strong bg-surface text-ink shadow-soft hover:border-faint hover:bg-canvas',
   subtle: 'bg-subtle text-ink hover:bg-line',
@@ -753,5 +755,44 @@ export function ConfirmDialog({
         </p>
       )}
     </Modal>
+  );
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Toasts                                                                                     */
+/* ------------------------------------------------------------------------------------------ */
+
+/** Renders the toast stack. Mounted once at the app root; announced to screen readers. */
+export function Toaster() {
+  const items = useToasts();
+  return (
+    <div
+      aria-live="polite"
+      className="pointer-events-none fixed inset-x-0 bottom-4 z-[60] flex flex-col items-center gap-2 px-4 sm:right-4 sm:left-auto sm:items-end"
+      data-testid="toaster"
+    >
+      {items.map((t) => (
+        <div
+          key={t.id}
+          className="pointer-events-auto flex animate-rise items-center gap-2.5 rounded-md bg-night px-3.5 py-2.5 text-[13px] text-white shadow-pop"
+          data-testid="toast"
+        >
+          {t.tone === 'success' ? (
+            <CheckCircle2 className="size-4 text-success-50" aria-hidden />
+          ) : (
+            <AlertTriangle className="size-4 text-signal" aria-hidden />
+          )}
+          {t.message}
+          <button
+            type="button"
+            onClick={() => dismissToast(t.id)}
+            className="-mr-1 ml-1 rounded-sm p-0.5 text-night-muted hover:text-white"
+            aria-label="Dismiss"
+          >
+            <X className="size-3.5" aria-hidden />
+          </button>
+        </div>
+      ))}
+    </div>
   );
 }

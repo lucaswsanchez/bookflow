@@ -238,15 +238,18 @@ export default function AdminLayout() {
               <LogOut className="size-4" aria-hidden />
             </IconButton>
           </div>
-          <div className="flex justify-end px-2.5">
-            <NavLink
-              to="/app/ui"
-              className="font-mono text-[10.5px] text-night-muted/70 hover:text-white"
-              data-testid="nav-ui-kit"
-            >
-              UI kit
-            </NavLink>
-          </div>
+          {/* Internal design-system page, only linked in development */}
+          {import.meta.env.DEV && (
+            <div className="flex justify-end px-2.5">
+              <NavLink
+                to="/app/ui"
+                className="font-mono text-[10.5px] text-night-muted/70 hover:text-white"
+                data-testid="nav-ui-kit"
+              >
+                UI kit
+              </NavLink>
+            </div>
+          )}
         </div>
       </aside>
 

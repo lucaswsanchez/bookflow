@@ -97,9 +97,9 @@ export default function DashboardPage() {
       occupancy,
       total: totalOccupancy(occupancy),
       today: totalOccupancy(todayOccupancy),
-      toAttend: todays.filter(
-        (a) => a.status === 'CONFIRMED' && new Date(a.startsAt).getTime() > now.getTime(),
-      ).length,
+      remaining: todays
+        .filter((a) => a.status === 'CONFIRMED' && new Date(a.startsAt).getTime() > now.getTime())
+        .sort((x, y) => x.startsAt.localeCompare(y.startsAt)),
     };
   }, [week, weekAppointments.data, staff.data, isStaff, user?.staffId, tz, today, now]);
 
@@ -139,21 +139,39 @@ export default function DashboardPage() {
         <ErrorState message={summary.error.message} onRetry={() => summary.refetch()} />
       ) : (
         <div className="space-y-8">
-          {/* KPIs with hierarchy: today's revenue leads, the rest support it. */}
-          <div className="grid overflow-hidden rounded-lg border border-line bg-surface shadow-soft lg:grid-cols-[minmax(0,1.25fr)_minmax(0,2fr)]">
-            <div className="bg-night px-5 py-5 text-night-text sm:px-6">
+          {/* KPIs: today's revenue leads; three supporting figures, no duplicates. */}
+          <div className="grid overflow-hidden rounded-lg border border-line bg-surface shadow-soft lg:grid-cols-[minmax(0,1.1fr)_minmax(0,2fr)]">
+            <div className="flex flex-col justify-between gap-5 bg-night px-5 py-5 text-night-text sm:px-6">
               {s ? (
                 <>
-                  <p className="eyebrow text-night-muted">Revenue today</p>
-                  <p
-                    className="tabular mt-2.5 text-[36px] leading-none font-medium text-white"
-                    data-testid="stat-today-revenue"
-                  >
-                    {formatPrice(s.today.estimatedRevenue)}
-                  </p>
-                  <p className="mt-3 text-[13px] text-night-muted">
-                    Confirmed and completed ·{' '}
-                    <span className="text-night-text">{s.today.byStatus.COMPLETED ?? 0} done</span>
+                  <div>
+                    <p className="eyebrow text-night-muted">Revenue today</p>
+                    <p
+                      className="tabular mt-2.5 text-[38px] leading-none font-semibold tracking-[-0.03em] text-white"
+                      data-testid="stat-today-revenue"
+                    >
+                      {formatPrice(s.today.estimatedRevenue)}
+                    </p>
+                    <p className="mt-2 text-[13px] text-night-muted">Confirmed and completed</p>
+                  </div>
+                  <p className="flex flex-wrap items-baseline gap-x-2 border-t border-night-line pt-3 text-[13px] text-night-muted">
+                    This week
+                    <span
+                      className="tabular font-medium text-white"
+                      data-testid="stat-week-revenue"
+                    >
+                      {formatPrice(s.week.estimatedRevenue)}
+                    </span>
+                    ·
+                    <span>
+                      <span
+                        className="tabular text-night-text"
+                        data-testid="stat-week-appointments"
+                      >
+                        {s.week.appointments}
+                      </span>{' '}
+                      appointments
+                    </span>
                   </p>
                 </>
               ) : (
@@ -163,22 +181,28 @@ export default function DashboardPage() {
                 </>
               )}
             </div>
-            <div className="grid grid-cols-2 divide-line sm:grid-cols-4 sm:divide-x [&>*]:border-line max-sm:[&>*:nth-child(-n+2)]:border-b max-sm:[&>*:nth-child(odd)]:border-r">
+            <div className="grid grid-cols-1 divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               {s ? (
                 <>
                   <Kpi>
                     <Stat
-                      label="Booked today"
+                      label="Appointments today"
                       value={s.today.appointments}
-                      hint={`${s.today.byStatus.CONFIRMED ?? 0} confirmed`}
+                      hint={`${s.today.byStatus.COMPLETED ?? 0} completed · ${s.today.byStatus.NO_SHOW ?? 0} no-show`}
                       testId="stat-today-appointments"
                     />
                   </Kpi>
                   <Kpi>
                     <Stat
-                      label="Still to attend"
-                      value={insights ? insights.toAttend : '—'}
-                      hint={nowMinute ? `after ${minutesToTime(nowMinute)}` : undefined}
+                      label="Remaining today"
+                      value={insights ? insights.remaining.length : '—'}
+                      hint={
+                        insights
+                          ? insights.remaining[0]
+                            ? `Next at ${formatTime(insights.remaining[0].startsAt, tz)}`
+                            : 'Nothing left for today'
+                          : undefined
+                      }
                       testId="stat-to-attend"
                     />
                   </Kpi>
@@ -190,17 +214,9 @@ export default function DashboardPage() {
                       testId="stat-today-occupancy"
                     />
                   </Kpi>
-                  <Kpi>
-                    <Stat
-                      label="This week"
-                      value={formatPrice(s.week.estimatedRevenue)}
-                      hint={<span data-testid="stat-week-appointments">{s.week.appointments}</span>}
-                      testId="stat-week-revenue"
-                    />
-                  </Kpi>
                 </>
               ) : (
-                Array.from({ length: 4 }, (_, i) => (
+                Array.from({ length: 3 }, (_, i) => (
                   <Kpi key={i}>
                     <Skeleton className="h-3 w-20" />
                     <Skeleton className="mt-3 h-6 w-16" />
@@ -210,40 +226,106 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Today's schedule + next up */}
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
-            <Section
-              title="Today’s schedule"
-              description={
-                insights
-                  ? `${insights.todays.filter((a) => a.status !== 'CANCELLED').length} appointments across ${insights.people.length} ${insights.people.length === 1 ? 'professional' : 'professionals'}`
-                  : undefined
-              }
-              action={
-                <Link
-                  to="/app/agenda"
-                  className="inline-flex items-center gap-1 text-[13px] font-medium text-accent-ink hover:underline"
-                >
-                  Full agenda <ArrowRight className="size-3.5" aria-hidden />
-                </Link>
-              }
-              testId="today-schedule"
-            >
-              {insights ? (
-                <DayTimeline
-                  people={insights.people}
-                  appointments={insights.todays}
-                  date={today}
-                  nowMinute={nowMinute}
-                  tz={tz}
-                  onSelect={setSelected}
-                />
-              ) : (
-                <Skeleton className="h-56 w-full" />
-              )}
-            </Section>
+            {/* Left: today's schedule, then the week in one band */}
+            <div className="min-w-0 space-y-8">
+              <Section
+                title="Today’s schedule"
+                description={
+                  insights
+                    ? `${insights.todays.filter((a) => a.status !== 'CANCELLED').length} appointments · ${insights.people.length} ${insights.people.length === 1 ? 'professional' : 'professionals'}`
+                    : undefined
+                }
+                action={
+                  <Link
+                    to="/app/agenda"
+                    className="inline-flex items-center gap-1 text-[13px] font-medium text-accent-ink hover:underline"
+                  >
+                    Full agenda <ArrowRight className="size-3.5" aria-hidden />
+                  </Link>
+                }
+                testId="today-schedule"
+              >
+                {insights ? (
+                  <DayTimeline
+                    people={insights.people}
+                    appointments={insights.todays}
+                    date={today}
+                    nowMinute={nowMinute}
+                    tz={tz}
+                    onSelect={setSelected}
+                  />
+                ) : (
+                  <Skeleton className="h-56 w-full" />
+                )}
+              </Section>
 
-            <Section title="Up next" description="Confirmed bookings coming up">
+              <Section
+                title="This week"
+                action={
+                  isStaff ? undefined : (
+                    <Link
+                      to="/app/reports"
+                      className="inline-flex items-center gap-1 text-[13px] font-medium text-accent-ink hover:underline"
+                    >
+                      Reports <ArrowRight className="size-3.5" aria-hidden />
+                    </Link>
+                  )
+                }
+              >
+                <div className="grid grid-cols-1 divide-y divide-line rounded-lg border border-line bg-surface shadow-soft md:grid-cols-3 md:divide-x md:divide-y-0">
+                  <div className="p-4 sm:p-5" data-testid="occupancy">
+                    <p className="eyebrow mb-3">Occupancy</p>
+                    {insights ? (
+                      insights.occupancy.length === 0 ? (
+                        <p className="text-sm text-muted">No working hours set.</p>
+                      ) : (
+                        <ul className="space-y-3.5">
+                          {insights.occupancy.map((o) => (
+                            <li key={o.staffId}>
+                              <div className="mb-1.5 flex items-center justify-between gap-2 text-[13px]">
+                                <span className="flex min-w-0 items-center gap-2 font-medium">
+                                  <Avatar name={o.name} color={o.color} size="sm" />
+                                  <span className="truncate">{o.name}</span>
+                                </span>
+                                <span className="tabular shrink-0 text-ink-soft">
+                                  {formatPercent(o.rate)}
+                                </span>
+                              </div>
+                              <Meter value={o.rate ?? 0} />
+                              <p className="tabular mt-1 text-[11px] text-muted">
+                                {Math.round(o.bookedMinutes / 60)} h of{' '}
+                                {Math.round(o.scheduledMinutes / 60)} h
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      )
+                    ) : (
+                      <ListSkeleton rows={3} />
+                    )}
+                  </div>
+                  <div className="p-4 sm:p-5">
+                    <p className="eyebrow mb-3">Appointments per day</p>
+                    {insights ? (
+                      <WeekBars days={insights.days} today={today} />
+                    ) : (
+                      <Skeleton className="h-40 w-full" />
+                    )}
+                  </div>
+                  <div className="p-4 sm:p-5">
+                    <p className="eyebrow mb-3">By status</p>
+                    {weekAppointments.data ? (
+                      <StatusBreakdown counts={countByStatus(weekAppointments.data)} />
+                    ) : (
+                      <ListSkeleton rows={4} />
+                    )}
+                  </div>
+                </div>
+              </Section>
+            </div>
+
+            <Section title="Up next">
               {!s ? (
                 <ListSkeleton />
               ) : s.upcoming.length === 0 ? (
@@ -277,7 +359,7 @@ export default function DashboardPage() {
                           className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-canvas"
                         >
                           <div className="w-14 shrink-0">
-                            <p className="tabular text-[13px] font-medium">
+                            <p className="mono text-[13px] font-medium">
                               {formatTime(a.startsAt, tz)}
                             </p>
                             <p className="text-[11px] text-muted">
@@ -290,6 +372,7 @@ export default function DashboardPage() {
                           </div>
                           <span title={a.staff.name}>
                             <Avatar name={a.staff.name} color={a.staff.color} size="sm" />
+                            <span className="sr-only">{a.staff.name}</span>
                           </span>
                         </button>
                       )}
@@ -297,67 +380,6 @@ export default function DashboardPage() {
                   ))}
                 </ul>
               )}
-            </Section>
-          </div>
-
-          {/* Secondary metrics */}
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]">
-            <Section
-              title="Occupancy"
-              description="Booked time vs. working hours this week"
-              testId="occupancy"
-            >
-              <Panel>
-                {insights ? (
-                  insights.occupancy.length === 0 ? (
-                    <p className="text-sm text-muted">No working hours set.</p>
-                  ) : (
-                    <ul className="space-y-4">
-                      {insights.occupancy.map((o) => (
-                        <li key={o.staffId}>
-                          <div className="mb-1.5 flex items-center justify-between text-[13px]">
-                            <span className="flex items-center gap-2 font-medium">
-                              <Avatar name={o.name} color={o.color} size="sm" />
-                              {o.name}
-                            </span>
-                            <span className="tabular">{formatPercent(o.rate)}</span>
-                          </div>
-                          <Meter value={o.rate ?? 0} />
-                          <p className="tabular mt-1 text-[11px] text-muted">
-                            {Math.round(o.bookedMinutes / 60)}h /{' '}
-                            {Math.round(o.scheduledMinutes / 60)}h
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  )
-                ) : (
-                  <ListSkeleton rows={3} />
-                )}
-              </Panel>
-            </Section>
-
-            <Section title="Activity" description="Appointments per day this week">
-              <Panel>
-                {insights ? (
-                  <WeekBars days={insights.days} today={today} />
-                ) : (
-                  <Skeleton className="h-40 w-full" />
-                )}
-              </Panel>
-            </Section>
-
-            <Section
-              title="Status this week"
-              description={s ? `${s.week.appointments} active appointments` : undefined}
-            >
-              <Panel>
-                {weekAppointments.data ? (
-                  <StatusBreakdown counts={countByStatus(weekAppointments.data)} />
-                ) : (
-                  <ListSkeleton rows={4} />
-                )}
-              </Panel>
             </Section>
           </div>
         </div>
@@ -370,14 +392,6 @@ export default function DashboardPage() {
 
 function Kpi({ children }: { children: React.ReactNode }) {
   return <div className="min-w-0 px-4 py-5 sm:px-5">{children}</div>;
-}
-
-function Panel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-lg border border-line bg-surface p-4 shadow-soft sm:p-5">
-      {children}
-    </div>
-  );
 }
 
 function NextUp({
@@ -410,7 +424,7 @@ function NextUp({
         <span className="eyebrow text-signal">{when}</span>
         <StatusBadge status={a.status} />
       </div>
-      <p className="tabular mt-2 text-[26px] leading-none font-medium text-white">
+      <p className="mono mt-2 text-[26px] leading-none font-medium text-white">
         {formatTime(a.startsAt, tz)}
       </p>
       <p className="mt-2.5 truncate text-[15px] font-medium text-white">{a.client.name}</p>
@@ -485,7 +499,7 @@ function DayTimeline({
             {ticks.slice(1, -1).map((t) => (
               <span
                 key={t}
-                className="tabular absolute top-2.5 -translate-x-1/2 text-[10.5px] text-muted"
+                className="mono absolute top-2.5 -translate-x-1/2 text-[10.5px] text-muted"
                 style={{ left: pct(t) }}
               >
                 {minutesToTime(t)}
@@ -498,6 +512,9 @@ function DayTimeline({
           {people.map((p) => {
             const ranges = (p.workingHours ?? []).filter((h) => h.weekday === weekday);
             const mine = visible.filter((a) => a.staff.id === p.id);
+            const next = mine.find(
+              (a) => a.status === 'CONFIRMED' && minutesOfDay(a.startsAt, tz) >= nowMinute,
+            );
             return (
               <div
                 key={p.id}
@@ -508,8 +525,15 @@ function DayTimeline({
                   <Avatar name={p.name} color={p.color} size="sm" />
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-medium">{p.name.split(' ')[0]}</p>
-                    <p className="tabular text-[10.5px] text-muted">
+                    <p className="text-[11px] text-muted">
                       {mine.length} {mine.length === 1 ? 'appt' : 'appts'}
+                      {next && (
+                        <>
+                          <span className="mono block text-ink-soft">
+                            {formatTime(next.startsAt, tz)}
+                          </span>
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -535,7 +559,7 @@ function DayTimeline({
                   {mine.map((a) => {
                     const from = minutesOfDay(a.startsAt, tz);
                     const to = minutesOfDay(a.endsAt, tz);
-                    const roomy = (to - from) / span > 0.07;
+                    const roomy = (to - from) / span > 0.08;
                     return (
                       <button
                         key={a.id}
@@ -555,7 +579,7 @@ function DayTimeline({
                       >
                         {roomy && (
                           <>
-                            <span className="tabular block pt-1 font-medium">
+                            <span className="mono block pt-1 font-medium">
                               {formatTime(a.startsAt, tz)}
                             </span>
                             <span className="block truncate opacity-80">

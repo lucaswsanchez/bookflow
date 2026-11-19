@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Mail, Pencil, Phone, Plus, Search, Trash2, Users } from 'lucide-react';
@@ -28,6 +29,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { api } from '../../lib/api';
 import { DEFAULT_TZ, formatDay, formatPrice, formatTime, toLocalDate } from '../../lib/format';
 import type { AppointmentStatus, Client } from '../../lib/types';
+import { toast } from '../../lib/toast';
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Name is required').max(80),
@@ -71,14 +73,21 @@ export default function ClientsPage() {
     mutationFn: (id: string) => api(`/clients/${id}`, { method: 'DELETE' }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
+      toast('Client deleted');
       setDeleting(null);
     },
   });
 
-  const actions = (c: Client) => {
+  const actions = (c: Client, reveal = false) => {
     const bookings = c._count?.appointments ?? 0;
     return (
-      <div className="flex shrink-0 justify-end gap-0.5">
+      <div
+        className={clsx(
+          'flex shrink-0 justify-end gap-0.5',
+          reveal &&
+            'transition-opacity [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-within:opacity-100',
+        )}
+      >
         <IconButton
           label={`Edit ${c.name}`}
           size="sm"
@@ -179,7 +188,7 @@ export default function ClientsPage() {
                     key={c.id}
                     data-testid="client-row"
                     onClick={() => setViewing(c)}
-                    className="cursor-pointer transition-colors hover:bg-subtle/60"
+                    className="group cursor-pointer transition-colors hover:bg-subtle/60"
                   >
                     <Td>
                       <span className="flex items-center gap-3">
@@ -190,7 +199,7 @@ export default function ClientsPage() {
                     <Td className="tabular whitespace-nowrap text-ink-soft">{c.phone}</Td>
                     <Td className="text-ink-soft">{c.email ?? '—'}</Td>
                     <Td className="tabular text-right">{c._count?.appointments ?? 0}</Td>
-                    <Td>{actions(c)}</Td>
+                    <Td>{actions(c, true)}</Td>
                   </tr>
                 ))}
               </tbody>
@@ -341,7 +350,7 @@ function ClientProfile({ clientId, onEdit }: { clientId: string; onEdit: () => v
                   <p className="font-semibold">
                     {formatDay(toLocalDate(new Date(a.startsAt), tz), { weekday: undefined })}
                   </p>
-                  <p className="tabular text-xs text-muted">{formatTime(a.startsAt, tz)}</p>
+                  <p className="mono text-xs text-muted">{formatTime(a.startsAt, tz)}</p>
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate">{a.service.name}</p>
@@ -382,6 +391,7 @@ function ClientForm({ client, onDone }: { client: Client | null; onDone: () => v
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['clients'] });
       await queryClient.invalidateQueries({ queryKey: ['client'] });
+      toast('Client saved');
       onDone();
     },
   });

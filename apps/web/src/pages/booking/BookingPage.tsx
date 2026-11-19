@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, CalendarPlus, Check, Clock, MapPin, Phone } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Avatar,
@@ -60,6 +60,9 @@ export default function BookingPage() {
     return Array.from({ length: DAYS_AHEAD }, (_, i) => addDays(today, i));
   }, [tz]);
   const [date, setDate] = useState(days[0]);
+  // Until the client picks a day, skip forward to the first day the API reports free times.
+  const [datePicked, setDatePicked] = useState(false);
+  const [skipped, setSkipped] = useState(false);
 
   const services = useQuery({
     queryKey: ['public-services', slug],
@@ -80,6 +83,15 @@ export default function BookingPage() {
       }),
     enabled: !!service && !!staff && step === 2,
   });
+
+  useEffect(() => {
+    if (datePicked || !availability.data || availability.data.slots.length > 0) return;
+    const i = days.indexOf(date);
+    if (i >= 0 && i < days.length - 1) {
+      setDate(days[i + 1]);
+      setSkipped(true);
+    }
+  }, [availability.data, datePicked, date, days]);
 
   const book = useMutation({
     mutationFn: (values: ClientDetails) =>
@@ -160,47 +172,62 @@ export default function BookingPage() {
 
   return (
     <PageShell>
-      <header
-        className="flex items-start gap-4 pt-2 pb-8 sm:gap-5 sm:pt-6 sm:pb-10"
-        data-testid="booking-header"
-      >
-        <BusinessMark
-          name={b.name}
-          size="lg"
-          className="size-11! text-base! sm:size-14! sm:text-xl!"
-        />
-        <div className="min-w-0">
-          {place && <p className="eyebrow mb-1.5">{place}</p>}
-          <h1
-            className="text-[26px] leading-[1.05] font-semibold tracking-[-0.035em] text-ink sm:text-[40px]"
-            data-testid="business-name"
-          >
-            {name}
-          </h1>
-          {b.description && (
-            <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft">
-              {b.description}
-            </p>
-          )}
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-muted">
-            {b.address && (
-              <span className="flex items-center gap-1.5">
-                <MapPin className="size-3.5" aria-hidden /> {b.address}
-              </span>
+      {step === 0 ? (
+        <header
+          className="flex items-start gap-4 pt-2 pb-8 sm:gap-5 sm:pt-6 sm:pb-10"
+          data-testid="booking-header"
+        >
+          <BusinessMark
+            name={b.name}
+            size="lg"
+            className="size-11! text-base! sm:size-14! sm:text-xl!"
+          />
+          <div className="min-w-0">
+            {place && <p className="eyebrow mb-1.5">{place}</p>}
+            <h1
+              className="text-[26px] leading-[1.05] font-semibold tracking-[-0.035em] text-ink sm:text-[40px]"
+              data-testid="business-name"
+            >
+              {name}
+            </h1>
+            {b.description && (
+              <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft">
+                {b.description}
+              </p>
             )}
-            {b.phone && (
-              <a
-                href={`tel:${b.phone}`}
-                className="tabular flex items-center gap-1.5 hover:text-accent-ink"
-              >
-                <Phone className="size-3.5" aria-hidden /> {b.phone}
-              </a>
-            )}
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-muted">
+              {b.address && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="size-3.5" aria-hidden /> {b.address}
+                </span>
+              )}
+              {b.phone && (
+                <a
+                  href={`tel:${b.phone}`}
+                  className="tabular flex items-center gap-1.5 hover:text-accent-ink"
+                >
+                  <Phone className="size-3.5" aria-hidden /> {b.phone}
+                </a>
+              )}
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      ) : (
+        <header className="flex items-center gap-3 pt-1 pb-5" data-testid="booking-header">
+          <BusinessMark name={b.name} size="sm" />
+          <div className="min-w-0">
+            <p
+              className="truncate text-[15px] font-semibold tracking-[-0.02em]"
+              data-testid="business-name"
+            >
+              {name}
+            </p>
+            {place && <p className="eyebrow">{place}</p>}
+          </div>
+        </header>
+      )}
 
-      <div className="grid gap-8 border-t border-line pt-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-12">
+      <div className="grid gap-8 border-t border-line pt-6 sm:pt-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-12">
         <div data-testid="booking-page" id="booking-steps" className="min-w-0 scroll-mt-4">
           <div className="mb-6 space-y-4">
             <StepIndicator current={step} />
@@ -241,6 +268,9 @@ export default function BookingPage() {
                   onSelect={(s) => {
                     setStaff(s);
                     setSlot(null);
+                    setDate(days[0]);
+                    setDatePicked(false);
+                    setSkipped(false);
                     goTo(2);
                   }}
                 />
@@ -256,6 +286,8 @@ export default function BookingPage() {
                   selected={date}
                   onSelect={(d) => {
                     setDate(d);
+                    setDatePicked(true);
+                    setSkipped(false);
                     setSlot(null);
                   }}
                 />
@@ -263,6 +295,14 @@ export default function BookingPage() {
                   <p className="mb-3 text-sm font-semibold text-ink">
                     {formatDay(date, { weekday: 'long', month: 'long' })}
                   </p>
+                  {skipped && !availability.isLoading && (
+                    <p
+                      className="-mt-2 mb-3 text-[13px] text-muted"
+                      data-testid="first-available-note"
+                    >
+                      First day with free times for {staff?.name.split(' ')[0]}.
+                    </p>
+                  )}
                   <SlotPicker
                     slots={availability.data?.slots}
                     loading={availability.isLoading}
@@ -387,7 +427,7 @@ function MobileSummary({ service, staff, slot, tz }: SummaryProps) {
       {slot && (
         <div className="rounded-full bg-subtle px-2.5 py-1">
           <dt className="sr-only">Time</dt>
-          <dd className="tabular">
+          <dd className="mono">
             {formatDay(toLocalDate(new Date(slot.start), tz))} · {formatTime(slot.start, tz)}
           </dd>
         </div>

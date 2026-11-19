@@ -34,6 +34,7 @@ import { revenueOf } from '../../lib/metrics';
 import { PERIOD_LABELS, resolvePeriod, type PeriodKey } from '../../lib/periods';
 import { STATUS_LABELS } from '../../lib/status';
 import type { Appointment, AppointmentStatus, StaffMember } from '../../lib/types';
+import { toast } from '../../lib/toast';
 
 const PERIODS: PeriodKey[] = ['today', 'next7', 'week', 'month', 'last30', 'custom'];
 const STATUSES: AppointmentStatus[] = ['CONFIRMED', 'COMPLETED', 'NO_SHOW', 'CANCELLED'];
@@ -44,7 +45,7 @@ export default function AppointmentsPage() {
   const tz = user?.business.timezone ?? DEFAULT_TZ;
   const isAdmin = user?.role === 'ADMIN';
   const today = toLocalDate(new Date(), tz);
-  const desktop = useMediaQuery('(min-width: 768px)');
+  const desktop = useMediaQuery('(min-width: 1024px)');
 
   const [periodKey, setPeriodKey] = useState<PeriodKey>('next7');
   const [custom, setCustom] = useState(() => resolvePeriod('next7', today));
@@ -100,6 +101,7 @@ export default function AppointmentsPage() {
         body: { status: 'COMPLETED' },
       }),
     onSuccess: () => {
+      toast('Marked as completed');
       void queryClient.invalidateQueries({ queryKey: ['appointments'] });
       void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
@@ -288,7 +290,7 @@ export default function AppointmentsPage() {
                           onClick={() => setSelected(a)}
                           className="cursor-pointer bg-surface transition-colors hover:bg-subtle/60"
                         >
-                          <Td className="tabular font-medium">
+                          <Td className="mono font-medium">
                             {formatTime(a.startsAt, tz)}
                             <span className="ml-1 font-normal text-faint">
                               {formatTime(a.endsAt, tz)}
@@ -356,7 +358,7 @@ export default function AppointmentsPage() {
                           onClick={() => setSelected(a)}
                           className="flex w-full items-start gap-3 px-4 py-3 text-left"
                         >
-                          <span className="tabular w-12 shrink-0 pt-0.5 font-medium">
+                          <span className="mono w-12 shrink-0 pt-0.5 font-medium">
                             {formatTime(a.startsAt, tz)}
                           </span>
                           <span className="min-w-0 flex-1">
