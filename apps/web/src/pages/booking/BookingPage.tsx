@@ -160,37 +160,47 @@ export default function BookingPage() {
 
   return (
     <PageShell>
-      <header className="pt-4 pb-8 sm:pt-8 sm:pb-10" data-testid="booking-header">
-        {place && <p className="eyebrow mb-4 text-accent-ink">{place}</p>}
+      <header
+        className="flex items-start gap-4 pt-2 pb-8 sm:gap-5 sm:pt-6 sm:pb-10"
+        data-testid="booking-header"
+      >
         <BusinessMark
           name={b.name}
           size="lg"
-          className="size-12! text-xl! sm:size-14! sm:text-2xl!"
+          className="size-11! text-base! sm:size-14! sm:text-xl!"
         />
-        <h1
-          className="mt-5 font-sans font-semibold tracking-tight text-[30px] leading-[1.05] text-accent-ink sm:text-[44px]"
-          data-testid="business-name"
-        >
-          {name}
-        </h1>
-        {b.description && (
-          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft">{b.description}</p>
-        )}
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-muted">
-          {b.address && (
-            <span className="flex items-center gap-1.5">
-              <MapPin className="size-3.5" aria-hidden /> {b.address}
-            </span>
+        <div className="min-w-0">
+          {place && <p className="eyebrow mb-1.5">{place}</p>}
+          <h1
+            className="text-[26px] leading-[1.05] font-semibold tracking-[-0.035em] text-ink sm:text-[40px]"
+            data-testid="business-name"
+          >
+            {name}
+          </h1>
+          {b.description && (
+            <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-soft">
+              {b.description}
+            </p>
           )}
-          {b.phone && (
-            <a href={`tel:${b.phone}`} className="flex items-center gap-1.5 hover:text-accent-ink">
-              <Phone className="size-3.5" aria-hidden /> {b.phone}
-            </a>
-          )}
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-muted">
+            {b.address && (
+              <span className="flex items-center gap-1.5">
+                <MapPin className="size-3.5" aria-hidden /> {b.address}
+              </span>
+            )}
+            {b.phone && (
+              <a
+                href={`tel:${b.phone}`}
+                className="tabular flex items-center gap-1.5 hover:text-accent-ink"
+              >
+                <Phone className="size-3.5" aria-hidden /> {b.phone}
+              </a>
+            )}
+          </div>
         </div>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+      <div className="grid gap-8 border-t border-line pt-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-12">
         <div data-testid="booking-page" id="booking-steps" className="min-w-0 scroll-mt-4">
           <div className="mb-6 space-y-4">
             <StepIndicator current={step} />
@@ -296,18 +306,19 @@ export default function BookingPage() {
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-surface">
       <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
-        <Link to="/" aria-label="BookFlow home" className="opacity-80 hover:opacity-100">
-          <Logo />
-        </Link>
-        <Link to="/login" className="text-[13px] font-semibold text-ink-soft hover:text-accent-ink">
+        <span className="eyebrow">Online booking</span>
+        <Link to="/login" className="text-[13px] font-medium text-muted hover:text-ink">
           Staff login
         </Link>
       </nav>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 sm:px-6">{children}</main>
-      <footer className="border-t border-line py-6 text-center text-xs text-muted">
-        Online booking by <span className="font-semibold text-ink-soft">BookFlow</span>
+      <footer className="flex items-center justify-center gap-2 border-t border-line py-5 text-xs text-muted">
+        Powered by
+        <Link to="/" aria-label="BookFlow home">
+          <Logo className="scale-90 text-[13px]" />
+        </Link>
       </footer>
     </div>
   );
@@ -338,7 +349,7 @@ function Step({
             <ArrowLeft className="size-4" aria-hidden />
           </IconButton>
         )}
-        <h2 id={`${testId}-title`} className="text-xl font-semibold tracking-tight">
+        <h2 id={`${testId}-title`} className="text-[20px] font-semibold tracking-[-0.02em]">
           {title}
         </h2>
       </div>
@@ -359,24 +370,24 @@ function MobileSummary({ service, staff, slot, tz }: SummaryProps) {
   return (
     <dl className="flex flex-wrap gap-1.5 text-[13px] lg:hidden" data-testid="booking-summary">
       {service && (
-        <div className="rounded-sm bg-surface px-2 py-1 ring-1 ring-line">
+        <div className="rounded-full bg-subtle px-2.5 py-1">
           <dt className="sr-only">Service</dt>
           <dd>
-            <span className="font-semibold">{service.name}</span>{' '}
-            <span className="text-muted">{formatPrice(service.price)}</span>
+            <span className="font-medium">{service.name}</span>{' '}
+            <span className="tabular text-muted">{formatPrice(service.price)}</span>
           </dd>
         </div>
       )}
       {staff && (
-        <div className="rounded-sm bg-surface px-2 py-1 ring-1 ring-line">
+        <div className="rounded-full bg-subtle px-2.5 py-1">
           <dt className="sr-only">Professional</dt>
           <dd>{staff.name}</dd>
         </div>
       )}
       {slot && (
-        <div className="rounded-sm bg-surface px-2 py-1 ring-1 ring-line">
+        <div className="rounded-full bg-subtle px-2.5 py-1">
           <dt className="sr-only">Time</dt>
-          <dd>
+          <dd className="tabular">
             {formatDay(toLocalDate(new Date(slot.start), tz))} · {formatTime(slot.start, tz)}
           </dd>
         </div>
@@ -420,25 +431,28 @@ function SummaryPanel({ service, staff, slot, tz }: SummaryProps) {
     },
   ];
   return (
-    <div className="rounded-lg border border-line bg-surface" data-testid="booking-summary-panel">
-      <p className="eyebrow border-b border-line px-5 pt-2 pb-3">Your booking</p>
+    <div
+      className="overflow-hidden rounded-xl border border-line bg-canvas"
+      data-testid="booking-summary-panel"
+    >
+      <p className="eyebrow border-b border-line px-5 py-3">Your booking</p>
       <dl className="divide-y divide-line">
         {rows.map((r) => (
           <div key={r.label} className="px-5 py-3.5">
             <dt className="text-xs text-muted">{r.label}</dt>
-            <dd className="mt-0.5 text-sm font-semibold">
+            <dd className="mt-0.5 text-sm font-medium">
               {r.value ?? <span className="font-normal text-faint">Not selected</span>}
             </dd>
           </div>
         ))}
       </dl>
-      <div className="flex items-baseline justify-between border-t border-line bg-canvas/60 px-5 py-4">
-        <span className="text-sm text-muted">Total</span>
-        <span className="tabular text-lg font-semibold">
+      <div className="flex items-baseline justify-between bg-night px-5 py-4 text-white">
+        <span className="text-sm text-night-muted">Total</span>
+        <span className="tabular text-lg font-medium">
           {service ? (
             formatPrice(service.price)
           ) : (
-            <span className="text-sm font-normal text-faint">Choose a service</span>
+            <span className="font-sans text-sm font-normal text-night-muted">Choose a service</span>
           )}
         </span>
       </div>
@@ -454,27 +468,27 @@ function Confirmation({ booking, onRestart }: { booking: BookingSummary; onResta
       className="mx-auto max-w-md animate-rise py-6 text-center sm:py-12"
       data-testid="booking-confirmation"
     >
-      <span className="mx-auto grid size-14 place-items-center rounded-full bg-accent text-signal">
-        <Check className="size-7" strokeWidth={2.5} aria-hidden />
+      <span className="mx-auto grid size-12 place-items-center rounded-full bg-success-50 text-success">
+        <Check className="size-6" strokeWidth={2.5} aria-hidden />
       </span>
-      <h1 className="mt-6 font-sans font-semibold tracking-tight text-[36px] leading-tight text-accent-ink">
+      <h1 className="mt-5 text-[32px] leading-tight font-semibold tracking-[-0.035em] text-ink">
         You’re booked, {booking.clientName.split(' ')[0]}.
       </h1>
       <p className="mt-2 text-sm text-muted">
         We’re expecting you at {booking.business.name}. Keep this code handy.
       </p>
 
-      <div className="mt-8 overflow-hidden rounded-lg border border-line bg-surface text-left">
-        <div className="border-b border-dashed border-line-strong px-6 py-5 text-center">
-          <p className="eyebrow">Booking code</p>
+      <div className="mt-8 overflow-hidden rounded-xl border border-line bg-surface text-left shadow-soft">
+        <div className="bg-night px-6 py-6 text-center">
+          <p className="eyebrow text-night-muted">Booking code</p>
           <p
-            className="mt-1 font-mono text-[28px] font-semibold tracking-[0.18em] text-accent-ink"
+            className="mt-2 font-mono text-[30px] font-medium tracking-[0.16em] text-white"
             data-testid="booking-code"
           >
             {booking.code}
           </p>
         </div>
-        <dl className="grid grid-cols-[110px_1fr] gap-x-4 gap-y-3 px-6 py-5 text-sm">
+        <dl className="grid grid-cols-[100px_1fr] gap-x-4 gap-y-3 border-t-2 border-dashed border-line px-6 py-5 text-sm">
           <dt className="text-muted">When</dt>
           <dd className="font-semibold" data-testid="booking-datetime">
             {formatDay(toLocalDate(new Date(booking.startsAt), tz), { month: 'long' })},{' '}
